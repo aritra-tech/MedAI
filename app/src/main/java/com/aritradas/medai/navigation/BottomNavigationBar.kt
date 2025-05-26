@@ -1,4 +1,4 @@
-package com.aritradas.medai.ui.components
+package com.aritradas.medai.navigation
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Assignment
@@ -14,7 +14,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.aritradas.medai.navigation.Screens
 
 data class BottomNavItem(
     val name: String,
