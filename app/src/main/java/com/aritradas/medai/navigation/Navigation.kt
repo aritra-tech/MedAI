@@ -10,7 +10,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.aritradas.medai.ui.components.BottomNavigationBar
+import com.aritradas.medai.ui.presentation.login.LoginScreen
+import com.aritradas.medai.ui.presentation.splash.SplashScreen
 
 @Composable
 fun Navigation() {
@@ -39,7 +40,7 @@ fun Navigation() {
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(Screens.Splash.route) {
-                // Splash screen composable
+                SplashScreen(navController)
             }
             
             composable(Screens.Onboarding.route) {
@@ -47,7 +48,7 @@ fun Navigation() {
             }
             
             composable(Screens.Login.route) {
-                // Login screen composable
+                LoginScreen()
             }
             
             composable(Screens.Prescription.route) {
