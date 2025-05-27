@@ -10,11 +10,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.aritradas.medai.ui.presentation.login.GoogleAuthUiClient
 import com.aritradas.medai.ui.presentation.login.LoginScreen
 import com.aritradas.medai.ui.presentation.splash.SplashScreen
 
 @Composable
-fun Navigation() {
+fun Navigation(googleAuthUiClient: GoogleAuthUiClient) {
+
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -48,7 +50,10 @@ fun Navigation() {
             }
             
             composable(Screens.Login.route) {
-                LoginScreen()
+                LoginScreen(
+                    navController = navController,
+                    googleAuthUiClient
+                )
             }
             
             composable(Screens.Prescription.route) {

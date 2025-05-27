@@ -12,15 +12,27 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.aritradas.medai.navigation.Navigation
+import com.aritradas.medai.ui.presentation.login.GoogleAuthUiClient
 import com.aritradas.medai.ui.theme.MedAITheme
+import com.google.android.gms.auth.api.identity.Identity
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    private val googleAuthUiClient by lazy {
+        GoogleAuthUiClient(
+            content = applicationContext,
+            oneTapClient = Identity.getSignInClient(applicationContext)
+        )
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             MedAITheme {
-                Navigation()
+                Navigation(googleAuthUiClient)
             }
         }
     }

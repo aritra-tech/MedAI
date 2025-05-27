@@ -2,6 +2,7 @@ package com.aritradas.medai.ui.presentation.splash
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
@@ -14,6 +15,7 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.aritradas.medai.R
+import com.aritradas.medai.navigation.Screens
 
 @Composable
 fun SplashScreen(
@@ -32,6 +34,9 @@ fun SplashScreen(
             contentDescription = null,
             modifier = Modifier
                 .size(160.dp)
+                .clickable {
+                    navController.navigate(Screens.Login.route)
+                }
         )
     }
 }
