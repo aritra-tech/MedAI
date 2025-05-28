@@ -1,7 +1,7 @@
 package com.aritradas.medai.ui.presentation.login
 
 import androidx.lifecycle.ViewModel
-import com.aritradas.medai.domain.SignInResult
+import com.aritradas.medai.domain.model.SignInResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

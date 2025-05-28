@@ -1,4 +1,4 @@
-package com.aritradas.medai.domain
+package com.aritradas.medai.domain.model
 
 data class SignInResult(
     val data: UserData?,

@@ -4,8 +4,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
 import com.aritradas.medai.R
-import com.aritradas.medai.domain.SignInResult
-import com.aritradas.medai.domain.UserData
+import com.aritradas.medai.domain.model.SignInResult
+import com.aritradas.medai.domain.model.UserData
 import com.google.android.gms.auth.api.identity.BeginSignInRequest
 import com.google.android.gms.auth.api.identity.SignInClient
 import com.google.firebase.auth.GoogleAuthProvider
