@@ -8,4 +8,8 @@ object Constants {
     const val SCAN_PRESCRIPTION_SCREEN = "scan_prescription_screen"
     const val PROFILE_SCREEN = "profile_screen"
     const val SETTINGS_SCREEN = "settings_screen"
+
+
+    const val ANIMATION_DURATION = 1000
+    const val SPLASH_DELAY = 1000L
 }

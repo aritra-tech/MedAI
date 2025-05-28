@@ -42,7 +42,10 @@ fun Navigation(googleAuthUiClient: GoogleAuthUiClient) {
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(Screens.Splash.route) {
-                SplashScreen(navController)
+                SplashScreen(
+                    navController = navController,
+                    googleAuthUiClient = googleAuthUiClient
+                )
             }
             
             composable(Screens.Onboarding.route) {
@@ -52,7 +55,7 @@ fun Navigation(googleAuthUiClient: GoogleAuthUiClient) {
             composable(Screens.Login.route) {
                 LoginScreen(
                     navController = navController,
-                    googleAuthUiClient
+                    googleAuthUiClient = googleAuthUiClient
                 )
             }
             
