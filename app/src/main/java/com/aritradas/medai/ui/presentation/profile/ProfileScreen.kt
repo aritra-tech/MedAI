@@ -29,6 +29,7 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.aritradas.medai.BuildConfig
 import com.aritradas.medai.domain.model.UserData
+import com.aritradas.medai.navigation.Screens
 import com.aritradas.medai.ui.presentation.profile.components.SettingsCard
 import com.aritradas.medai.ui.presentation.profile.components.SettingsItemGroup
 
@@ -90,7 +91,7 @@ fun ProfileScreen(
                     itemName = "Settings",
                     iconVector = Icons.Outlined.Settings,
                     onClick = {
-
+                        navController.navigate(Screens.Settings.route)
                     }
                 )
 
@@ -103,7 +104,7 @@ fun ProfileScreen(
                     itemSubText = "Get help using MedAI",
                     iconVector = Icons.AutoMirrored.Outlined.Help,
                     onClick = {
-
+                        navController.navigate(Screens.Help.route)
                     }
                 )
             }
