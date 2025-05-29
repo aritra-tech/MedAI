@@ -39,6 +39,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -73,6 +74,9 @@ dependencies {
 
     // Timber
     implementation (libs.timber)
+
+    // Coil
+    implementation(libs.coil.compose)
 
     //Test
     testImplementation(libs.junit)

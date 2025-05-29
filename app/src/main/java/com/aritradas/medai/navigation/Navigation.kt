@@ -12,6 +12,9 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.aritradas.medai.ui.presentation.login.GoogleAuthUiClient
 import com.aritradas.medai.ui.presentation.login.LoginScreen
+import com.aritradas.medai.ui.presentation.profile.HelpScreen
+import com.aritradas.medai.ui.presentation.profile.ProfileScreen
+import com.aritradas.medai.ui.presentation.settings.SettingsScreen
 import com.aritradas.medai.ui.presentation.splash.SplashScreen
 
 @Composable
@@ -68,11 +71,22 @@ fun Navigation(googleAuthUiClient: GoogleAuthUiClient) {
             }
             
             composable(Screens.Profile.route) {
-                // Profile screen composable
+                ProfileScreen(
+                    navController = navController,
+                    userData = googleAuthUiClient.getSignedInUser()
+                )
             }
             
             composable(Screens.Settings.route) {
-                // Settings screen composable
+                SettingsScreen(
+                    navController = navController
+                )
+            }
+
+            composable(Screens.Help.route) {
+                HelpScreen(
+                    navController = navController
+                )
             }
         }
     }

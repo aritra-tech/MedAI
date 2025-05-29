@@ -10,4 +10,5 @@ sealed class Screens(val route: String) {
     data object ScanPrescription: Screens(Constants.SCAN_PRESCRIPTION_SCREEN)
     data object Profile: Screens(Constants.PROFILE_SCREEN)
     data object Settings: Screens(Constants.SETTINGS_SCREEN)
+    data object Help: Screens(Constants.HELP_SCREEN)
 }
