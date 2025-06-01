@@ -15,7 +15,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CameraAlt
@@ -24,6 +26,9 @@ import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -36,6 +41,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -55,9 +61,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.aritradas.medai.R
+import com.aritradas.medai.domain.model.Medication
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -66,10 +75,13 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PrescriptionSummarizeScreen(
-    navController: NavController
+    navController: NavController,
+    prescriptionViewModel: PrescriptionViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+    val uiState by prescriptionViewModel.uiState.collectAsState()
+
     var showDialog by remember { mutableStateOf(false) }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     var cameraUri by remember { mutableStateOf<Uri?>(null) }
@@ -107,18 +119,44 @@ fun PrescriptionSummarizeScreen(
         cameraUri = photoUri
         cameraLauncher.launch(photoUri)
         showDialog = false
+        Unit
     }
 
     val handleAddImage = {
         galleryLauncher.launch("image/*")
         showDialog = false
+        Unit
     }
 
     val handleRemoveImage = {
         imageUri = null
         cameraUri = null
+        prescriptionViewModel.clearSummary()
+        Unit
     }
 
+    val handleSummarize = {
+        imageUri?.let { uri ->
+            prescriptionViewModel.analyzePrescription(uri)
+        }
+        Unit
+    }
+
+    // Error dialog
+    uiState.error?.let { error ->
+        AlertDialog(
+            onDismissRequest = { prescriptionViewModel.clearError() },
+            title = { Text("Error") },
+            text = { Text(error) },
+            confirmButton = {
+                TextButton(onClick = { prescriptionViewModel.clearError() }) {
+                    Text("OK")
+                }
+            }
+        )
+    }
+
+    // Image picker dialog
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
@@ -180,7 +218,7 @@ fun PrescriptionSummarizeScreen(
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Localized description"
+                            contentDescription = "Back"
                         )
                     }
                 },
@@ -196,11 +234,13 @@ fun PrescriptionSummarizeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+                .padding(horizontal = 16.dp)
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Dashed border container
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Image upload section
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -227,7 +267,6 @@ fun PrescriptionSummarizeScreen(
                 }
 
                 if (imageUri != null) {
-                    // Display selected image with close button
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -242,7 +281,6 @@ fun PrescriptionSummarizeScreen(
                             contentScale = ContentScale.Crop
                         )
 
-                        // Close button
                         FloatingActionButton(
                             onClick = handleRemoveImage,
                             modifier = Modifier
@@ -260,7 +298,6 @@ fun PrescriptionSummarizeScreen(
                         }
                     }
                 } else {
-                    // Upload UI when no image is selected
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center,
@@ -272,18 +309,18 @@ fun PrescriptionSummarizeScreen(
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center
                         )
-                        
+
                         Spacer(modifier = Modifier.height(16.dp))
-                        
+
                         Text(
                             text = stringResource(R.string.take_a_photo_of_your_prescription_or_upload_an_existing_image),
                             style = MaterialTheme.typography.bodyMedium,
                             textAlign = TextAlign.Center,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                        
+
                         Spacer(modifier = Modifier.height(32.dp))
-                        
+
                         Button(
                             onClick = { showDialog = true },
                             colors = ButtonDefaults.buttonColors(
@@ -298,6 +335,170 @@ fun PrescriptionSummarizeScreen(
                         }
                     }
                 }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Summarize button
+            Button(
+                onClick = handleSummarize,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = imageUri != null && !uiState.isLoading
+            ) {
+                if (uiState.isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Analyzing...")
+                } else {
+                    Text("Summarize")
+                }
+            }
+
+            // Display summary result
+            uiState.summary?.let { summary ->
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Summary Card
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Text(
+                            text = "Prescription Summary",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        if (summary.summary.isNotEmpty()) {
+                            Text(
+                                text = summary.summary,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                        }
+
+                        // Medications
+                        if (summary.medications.isNotEmpty()) {
+                            Text(
+                                text = "Medications:",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            summary.medications.forEach { medication ->
+                                MedicationCard(medication = medication)
+                                Spacer(modifier = Modifier.height(8.dp))
+                            }
+                        }
+
+                        // Instructions
+                        if (summary.dosageInstructions.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = "Instructions:",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            summary.dosageInstructions.forEach { instruction ->
+                                Text(
+                                    text = "• $instruction",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+
+                        // Warnings
+                        if (summary.warnings.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Card(
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.errorContainer
+                                )
+                            ) {
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Text(
+                                        text = "⚠️ Important Warnings:",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.onErrorContainer
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+
+                                    summary.warnings.forEach { warning ->
+                                        Text(
+                                            text = "• $warning",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onErrorContainer
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+    }
+}
+
+@Composable
+private fun MedicationCard(medication: Medication) {
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Text(
+                text = medication.name,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+
+            if (medication.dosage.isNotEmpty()) {
+                Text(
+                    text = "Dosage: ${medication.dosage}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            if (medication.frequency.isNotEmpty()) {
+                Text(
+                    text = "Frequency: ${medication.frequency}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            if (medication.duration.isNotEmpty()) {
+                Text(
+                    text = "Duration: ${medication.duration}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }

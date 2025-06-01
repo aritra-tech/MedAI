@@ -1,3 +1,5 @@
+import org.gradle.kotlin.dsl.implementation
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -11,6 +13,7 @@ android {
     namespace = "com.aritradas.medai"
     compileSdk = 35
 
+    buildFeatures.buildConfig = true
     defaultConfig {
         applicationId = "com.aritradas.medai"
         minSdk = 24
@@ -22,8 +25,12 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField("String", "GEMINI_API_KEY", "\"${project.findProperty("GEMINI_API_KEY")}\"")
+        }
         release {
             isMinifyEnabled = false
+            buildConfigField("String", "GEMINI_API_KEY", "\"${project.findProperty("GEMINI_API_KEY")}\"")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -77,6 +84,15 @@ dependencies {
 
     // Coil
     implementation(libs.coil.compose)
+
+    // Gemini
+    implementation(libs.generativeai)
+
+    // Coroutine
+    implementation (libs.kotlinx.coroutines.android)
+
+    //Gson
+    implementation(libs.gson)
 
     //Test
     testImplementation(libs.junit)
