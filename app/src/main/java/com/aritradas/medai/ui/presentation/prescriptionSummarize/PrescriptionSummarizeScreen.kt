@@ -13,8 +13,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -26,8 +26,6 @@ import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -35,11 +33,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumTopAppBar
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -53,6 +51,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -62,7 +61,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.aritradas.medai.R
@@ -119,20 +117,17 @@ fun PrescriptionSummarizeScreen(
         cameraUri = photoUri
         cameraLauncher.launch(photoUri)
         showDialog = false
-        Unit
     }
 
     val handleAddImage = {
         galleryLauncher.launch("image/*")
         showDialog = false
-        Unit
     }
 
     val handleRemoveImage = {
         imageUri = null
         cameraUri = null
         prescriptionViewModel.clearSummary()
-        Unit
     }
 
     val handleSummarize = {
@@ -204,6 +199,7 @@ fun PrescriptionSummarizeScreen(
     }
 
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             MediumTopAppBar(
                 modifier = Modifier.fillMaxWidth(),
@@ -238,7 +234,6 @@ fun PrescriptionSummarizeScreen(
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
 
             // Image upload section
             Box(
@@ -276,8 +271,9 @@ fun PrescriptionSummarizeScreen(
                             model = imageUri,
                             contentDescription = "Selected prescription image",
                             modifier = Modifier
-                                .fillMaxSize()
-                                .clip(RoundedCornerShape(8.dp)),
+                                .width(240.dp)
+                                .height(240.dp)
+                                .clip(RoundedCornerShape(20.dp)),
                             contentScale = ContentScale.Crop
                         )
 
@@ -339,10 +335,9 @@ fun PrescriptionSummarizeScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Summarize button
             Button(
                 onClick = handleSummarize,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().height(50.dp),
                 enabled = imageUri != null && !uiState.isLoading
             ) {
                 if (uiState.isLoading) {
@@ -351,7 +346,10 @@ fun PrescriptionSummarizeScreen(
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Analyzing...")
+                    Text(
+                        text = "Analyzing...",
+                        color = Color.White
+                    )
                 } else {
                     Text("Summarize")
                 }
@@ -362,9 +360,9 @@ fun PrescriptionSummarizeScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 // Summary Card
-                Card(
+                androidx.compose.material3.Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
+                    colors = androidx.compose.material3.CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant
                     )
                 ) {
@@ -389,7 +387,6 @@ fun PrescriptionSummarizeScreen(
                             Spacer(modifier = Modifier.height(16.dp))
                         }
 
-                        // Medications
                         if (summary.medications.isNotEmpty()) {
                             Text(
                                 text = "Medications:",
@@ -405,31 +402,10 @@ fun PrescriptionSummarizeScreen(
                             }
                         }
 
-                        // Instructions
                         if (summary.dosageInstructions.isNotEmpty()) {
                             Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = "Instructions:",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            summary.dosageInstructions.forEach { instruction ->
-                                Text(
-                                    text = "• $instruction",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-
-                        // Warnings
-                        if (summary.warnings.isNotEmpty()) {
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Card(
-                                colors = CardDefaults.cardColors(
+                            androidx.compose.material3.Card(
+                                colors = androidx.compose.material3.CardDefaults.cardColors(
                                     containerColor = MaterialTheme.colorScheme.errorContainer
                                 )
                             ) {
@@ -463,13 +439,17 @@ fun PrescriptionSummarizeScreen(
 
 @Composable
 private fun MedicationCard(medication: Medication) {
-    Card(
-        colors = CardDefaults.cardColors(
+    androidx.compose.material3.Card(
+        colors = androidx.compose.material3.CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = androidx.compose.material3.CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp)
+        ) {
             Text(
                 text = medication.name,
                 style = MaterialTheme.typography.titleSmall,
