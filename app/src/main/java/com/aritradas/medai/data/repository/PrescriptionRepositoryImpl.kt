@@ -57,6 +57,7 @@ class PrescriptionRepositoryImpl @Inject constructor(
                     }
                     
                     If you cannot clearly read certain information, use "Not clearly visible" for that field.
+                    Also make sure the medicines listed exists with the names. Make sure to validate all.
                     Ensure all JSON keys are present even if the arrays are empty.
                 """.trimIndent()
 
