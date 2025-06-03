@@ -83,25 +83,53 @@ class PrescriptionRepositoryImpl @Inject constructor(
             try {
                 val bitmap = uriToBitmap(imageUri)
                 val prompt = """
-                    Analyze this prescription image and extract the following information. 
+                    Analyze this prescription image and extract the following information.
+                    Your task is to carefully analyze the content and return a detailed, structured, and patient-friendly response.
                     Please respond ONLY with valid JSON in exactly this format (no additional text or markdown):
                     
                     {
+                        "patientInfo": {
+                            "name": "Full name of the patient",
+                            "age": "Age with units (e.g., 22 years)",
+                            "sex": "Male / Female / Other",
+                            "weight": "Weight with units (e.g., 58 kg)",
+                            "bloodPressure": "BP in format (systolic/diastolic)",
+                            "pulse": "Pulse rate with units (e.g., 87 bpm)",
+                            "oxygenSaturation": "SpO2 percentage (e.g., 98%)",
+                            "date": "Date of prescription (e.g., 18/01/2025)"
+                        },
+                        "diagnosis": {
+                            "presentingComplaints": "Short description of the problem (e.g., Varicocele)",
+                            "provisionalDiagnosis": "Initial diagnosis or impression by the doctor",
+                            "comorbidities": ["List any comorbid conditions mentioned, like diabetes or hypertension"],
+                            "additionalNotes": ["Any other relevant observations or medical history"]
+                        },
                         "medications": [
                             {
-                                "name": "medication name",
-                                "dosage": "dosage amount (e.g., 500mg, 1 tablet)",
-                                "frequency": "how often to take (e.g., twice daily, every 8 hours)",
-                                "duration": "how long to take (e.g., 7 days, 2 weeks)"
+                                "name": "Medication name (validated to be correct)",
+                                "dosage": "Strength or amount per dose (e.g., 1 tablet, 500mg)",
+                                "frequency": "How often to take (e.g., twice daily, every 8 hours)",
+                                "duration": "How long to take it (e.g., 7 days)",
+                                "route": "Route of administration (e.g., oral, topical)"
                             }
                         ],
-                        "dosageInstructions": ["Take with food", "Take before meals", "Do not crush"],
-                        "summary": "Brief summary of the prescription including patient info if visible",
-                        "warnings": ["Important warnings or contraindications if any"]
+                        "instructions": [
+                            "List of clear patient-friendly instructions based on the prescription. Examples: Apply cream locally, Take with food, Use support bandage"
+                        ],
+                        "dosageInstructions": [
+                          "Instructions related to how to take the medicine, e.g., Take after food, Do not crush"
+                        ],
+                        "warnings": [
+                          "Any important warnings, precautions, or side effects mentioned or inferred based on the medicines"
+                        ],
+                        "summary": "Summarize the entire prescription in plain, easy-to-understand English. Include what the patient is suffering from, what medications are prescribed, for how long, how they should be taken, and any precautions to follow."
                     }
-                    
                     If you cannot clearly read certain information, use "Not clearly visible" for that field.
+                    Ensure the medicine names exist and are valid (e.g., Chymoral Plus, Sporlac AF).
+                    Translate any shorthand or symbols like "T-Back" into full medical names if possible.
+                    Avoid medical jargon in the summary; use layman's terms.
                     Also make sure the medicines listed exists with the names. Make sure to validate all.
+                    Include physical aids prescribed (e.g., bandages or support garments) in the instructions.
                     Ensure all JSON keys are present even if the arrays are empty.
                 """.trimIndent()
 
