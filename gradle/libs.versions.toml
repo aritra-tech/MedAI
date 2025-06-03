@@ -22,6 +22,10 @@ playServicesAuth = "21.3.0"
 timber = "5.0.1"
 generativeai = "0.7.0"
 kotlinxCoroutines = "1.7.3"
+firebaseFirestore = "25.1.4"
+firebaseCrashlytics = "19.4.3"
+googleFirebaseCrashlytics = "3.0.3"
+firebaseMessaging = "24.1.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -57,8 +61,12 @@ play-services-auth = { module = "com.google.android.gms:play-services-auth", ver
 timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
 generativeai = { module = "com.google.ai.client.generativeai:generativeai", version.ref = "generativeai" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinxCoroutines" }
+firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore", version.ref = "firebaseFirestore" }
+firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics", version.ref = "firebaseCrashlytics" }
+firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging", version.ref = "firebaseMessaging" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+google-firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "googleFirebaseCrashlytics" }
