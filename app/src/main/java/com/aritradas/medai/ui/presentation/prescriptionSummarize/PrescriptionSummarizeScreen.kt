@@ -21,6 +21,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material3.AlertDialog
@@ -33,10 +34,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumTopAppBar
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.TopAppBarState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -132,70 +134,9 @@ fun PrescriptionSummarizeScreen(
 
     val handleSummarize = {
         imageUri?.let { uri ->
-            prescriptionViewModel.analyzePrescription(uri)
+            prescriptionViewModel.validateAndAnalyzePrescription(uri)
         }
         Unit
-    }
-
-    // Error dialog
-    uiState.error?.let { error ->
-        AlertDialog(
-            onDismissRequest = { prescriptionViewModel.clearError() },
-            title = { Text("Error") },
-            text = { Text(error) },
-            confirmButton = {
-                TextButton(onClick = { prescriptionViewModel.clearError() }) {
-                    Text("OK")
-                }
-            }
-        )
-    }
-
-    // Image picker dialog
-    if (showDialog) {
-        AlertDialog(
-            onDismissRequest = { showDialog = false },
-            text = {
-                Column {
-                    TextButton(
-                        onClick = handleTakePhoto,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Start,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.CameraAlt,
-                                contentDescription = "Take Photo"
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text("Take Photo")
-                        }
-                    }
-
-                    TextButton(
-                        onClick = handleAddImage,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Start,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Photo,
-                                contentDescription = "Add Image"
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text("Add Image")
-                        }
-                    }
-                }
-            },
-            confirmButton = {}
-        )
     }
 
     Scaffold(
@@ -315,7 +256,7 @@ fun PrescriptionSummarizeScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
 
-                        Spacer(modifier = Modifier.height(32.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
 
                         Button(
                             onClick = { showDialog = true },
@@ -338,20 +279,34 @@ fun PrescriptionSummarizeScreen(
             Button(
                 onClick = handleSummarize,
                 modifier = Modifier.fillMaxWidth().height(50.dp),
-                enabled = imageUri != null && !uiState.isLoading
+                enabled = imageUri != null && !uiState.isLoading && !uiState.isValidating
             ) {
-                if (uiState.isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Analyzing...",
-                        color = Color.White
-                    )
-                } else {
-                    Text("Summarize")
+                when {
+                    uiState.isValidating -> {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Validating...",
+                            color = Color.White
+                        )
+                    }
+                    uiState.isLoading -> {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Analyzing...",
+                            color = Color.White
+                        )
+                    }
+                    else -> {
+                        Text("Summarize")
+                    }
                 }
             }
 
@@ -434,6 +389,81 @@ fun PrescriptionSummarizeScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
         }
+    }
+
+    // Validation error dialog
+    uiState.validationError?.let { error ->
+        AlertDialog(
+            onDismissRequest = { prescriptionViewModel.clearValidationError() },
+            title = { Text("Invalid Prescription") },
+            text = { Text(error) },
+            confirmButton = {
+                TextButton(onClick = { prescriptionViewModel.clearValidationError() }) {
+                    Text("OK")
+                }
+            }
+        )
+    }
+
+    // Error dialog
+    uiState.error?.let { error ->
+        AlertDialog(
+            onDismissRequest = { prescriptionViewModel.clearError() },
+            title = { Text("Error") },
+            text = { Text(error) },
+            confirmButton = {
+                TextButton(onClick = { prescriptionViewModel.clearError() }) {
+                    Text("OK")
+                }
+            }
+        )
+    }
+
+    // Image picker dialog
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            text = {
+                Column {
+                    TextButton(
+                        onClick = handleTakePhoto,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Start,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CameraAlt,
+                                contentDescription = "Take Photo"
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text("Take Photo")
+                        }
+                    }
+
+                    TextButton(
+                        onClick = handleAddImage,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Start,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Photo,
+                                contentDescription = "Add Image"
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text("Add Image")
+                        }
+                    }
+                }
+            },
+            confirmButton = {}
+        )
     }
 }
 

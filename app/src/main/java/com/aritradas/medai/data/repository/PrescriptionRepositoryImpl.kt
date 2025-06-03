@@ -34,6 +34,50 @@ class PrescriptionRepositoryImpl @Inject constructor(
 
     private val gson = Gson()
 
+    override suspend fun validatePrescription(imageUri: Uri): Resource<Boolean> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val bitmap = uriToBitmap(imageUri)
+                val prompt = """
+                    Analyze this image to determine if it contains a valid medical prescription from a doctor or healthcare provider.
+                    
+                    Look for these key indicators of a prescription:
+                    1. Doctor's name, signature, or medical license number
+                    2. Patient information
+                    3. Medication names with proper dosages
+                    4. Date of prescription
+                    5. Pharmacy or clinic letterhead/stamp
+                    6. Medical terminology and format
+                    7. Rx symbol or prescription format
+                    
+                    Respond with ONLY "true" if this is clearly a medical prescription, or "false" if it's not.
+                    
+                    Consider it false if the image contains:
+                    - Random text or documents
+                    - Food items or general photos
+                    - Screenshots of non-medical content
+                    - Handwritten notes that aren't prescriptions
+                    - Medicine boxes/bottles (these are not prescriptions)
+                    - Generic medical information or articles
+                """.trimIndent()
+
+                val inputContent = content {
+                    image(bitmap)
+                    text(prompt)
+                }
+
+                val response = generativeModel.generateContent(inputContent)
+                val responseText = response.text?.trim()?.lowercase() ?: "false"
+
+                val isValid = responseText.contains("true")
+                Resource.Success(isValid)
+
+            } catch (e: Exception) {
+                Resource.Error("Failed to validate prescription: ${e.message}")
+            }
+        }
+    }
+
     override suspend fun summarizePrescription(imageUri: Uri): Resource<PrescriptionSummary> {
         return withContext(Dispatchers.IO) {
             try {

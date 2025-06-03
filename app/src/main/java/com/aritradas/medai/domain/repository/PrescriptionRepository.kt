@@ -5,5 +5,6 @@ import com.aritradas.medai.domain.model.PrescriptionSummary
 import com.aritradas.medai.utils.Resource
 
 interface PrescriptionRepository {
+    suspend fun validatePrescription(imageUri: Uri): Resource<Boolean>
     suspend fun summarizePrescription(imageUri: Uri): Resource<PrescriptionSummary>
 }
