@@ -5,7 +5,7 @@ object Constants {
     const val ONBOARDING_SCREEN = "onboarding_screen"
     const val LOGIN_SCREEN = "login_screen"
     const val PRESCRIPTION_SCREEN = "prescription_screen"
-    const val SCAN_PRESCRIPTION_SCREEN = "scan_prescription_screen"
+    const val PRESCRIPTION_SUMMARIZE_SCREEN = "prescription_summarize_screen"
     const val PROFILE_SCREEN = "profile_screen"
     const val SETTINGS_SCREEN = "settings_screen"
     const val HELP_SCREEN = "help_screen"

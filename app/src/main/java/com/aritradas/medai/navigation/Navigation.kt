@@ -12,6 +12,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.aritradas.medai.ui.presentation.login.GoogleAuthUiClient
 import com.aritradas.medai.ui.presentation.login.LoginScreen
+import com.aritradas.medai.ui.presentation.prescription.PrescriptionScreen
+import com.aritradas.medai.ui.presentation.prescriptionSummarize.PrescriptionSummarizeScreen
 import com.aritradas.medai.ui.presentation.profile.HelpScreen
 import com.aritradas.medai.ui.presentation.profile.ProfileScreen
 import com.aritradas.medai.ui.presentation.settings.SettingsScreen
@@ -63,11 +65,15 @@ fun Navigation(googleAuthUiClient: GoogleAuthUiClient) {
             }
             
             composable(Screens.Prescription.route) {
-                // Prescription screen composable
+                PrescriptionScreen(
+                    navController = navController
+                )
             }
             
-            composable(Screens.ScanPrescription.route) {
-                // Scan prescription screen composable
+            composable(Screens.PrescriptionSummarize.route) {
+                PrescriptionSummarizeScreen(
+                    navController = navController
+                )
             }
             
             composable(Screens.Profile.route) {

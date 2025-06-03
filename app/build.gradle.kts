@@ -1,3 +1,5 @@
+import org.gradle.kotlin.dsl.implementation
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -5,12 +7,14 @@ plugins {
     id("com.google.devtools.ksp")
     id("com.google.gms.google-services")
     id("dagger.hilt.android.plugin")
+    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
 }
 
 android {
     namespace = "com.aritradas.medai"
     compileSdk = 35
 
+    buildFeatures.buildConfig = true
     defaultConfig {
         applicationId = "com.aritradas.medai"
         minSdk = 24
@@ -19,6 +23,9 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        
+        // Add BuildConfig field for Gemini API key
+        buildConfigField("String", "GEMINI_API_KEY", "\"${project.findProperty("GEMINI_API_KEY") ?: ""}\"")
     }
 
     buildTypes {
@@ -77,6 +84,15 @@ dependencies {
 
     // Coil
     implementation(libs.coil.compose)
+
+    // Gemini
+    implementation(libs.generativeai)
+
+    // Coroutine
+    implementation (libs.kotlinx.coroutines.android)
+
+    //Gson
+    implementation(libs.gson)
 
     //Test
     testImplementation(libs.junit)
