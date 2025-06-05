@@ -17,6 +17,7 @@ import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.content
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -183,6 +184,67 @@ class PrescriptionRepositoryImpl @Inject constructor(
                 Resource.Success(documentRef.id)
             } catch (e: Exception) {
                 Resource.Error("Failed to save prescription: ${e.message}")
+            }
+        }
+    }
+
+    override suspend fun getSavedPrescriptions(): Resource<List<SavedPrescription>> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val currentUser = auth.currentUser
+                if (currentUser == null) {
+                    return@withContext Resource.Error("User not authenticated")
+                }
+
+                val querySnapshot = firestore
+                    .collection("users")
+                    .document(currentUser.uid)
+                    .collection("prescriptions")
+                    .orderBy("savedAt", Query.Direction.DESCENDING)
+                    .get()
+                    .await()
+
+                val prescriptions = querySnapshot.documents.mapNotNull { document ->
+                    try {
+                        val data = document.data ?: return@mapNotNull null
+                        val summaryMap =
+                            data["summary"] as? Map<String, Any> ?: return@mapNotNull null
+
+                        // Parse the summary from Firestore data
+                        val medicationsData =
+                            summaryMap["medications"] as? List<Map<String, Any>> ?: emptyList()
+                        val medications = medicationsData.map { medMap ->
+                            Medication(
+                                name = medMap["name"] as? String ?: "",
+                                dosage = medMap["dosage"] as? String ?: "",
+                                frequency = medMap["frequency"] as? String ?: "",
+                                duration = medMap["duration"] as? String ?: ""
+                            )
+                        }
+
+                        val prescriptionSummary = PrescriptionSummary(
+                            medications = medications,
+                            dosageInstructions = (summaryMap["dosageInstructions"] as? List<String>)
+                                ?: emptyList(),
+                            summary = summaryMap["summary"] as? String ?: "",
+                            warnings = (summaryMap["warnings"] as? List<String>) ?: emptyList()
+                        )
+
+                        SavedPrescription(
+                            id = document.id,
+                            summary = prescriptionSummary,
+                            savedAt = (data["savedAt"] as? com.google.firebase.Timestamp)?.toDate()
+                                ?: java.util.Date(),
+                            title = data["title"] as? String ?: "Untitled Prescription"
+                        )
+                    } catch (e: Exception) {
+                        null // Skip malformed documents
+                    }
+                }
+
+                Resource.Success(prescriptions)
+            } catch (e: Exception) {
+                Resource.Error("Failed to fetch prescriptions: ${e.message}")
             }
         }
     }
