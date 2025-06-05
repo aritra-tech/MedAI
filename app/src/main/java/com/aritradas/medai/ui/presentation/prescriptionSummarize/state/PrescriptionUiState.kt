@@ -8,5 +8,8 @@ data class PrescriptionUiState(
     val isValidPrescription: Boolean? = null,
     val validationError: String? = null,
     val summary: PrescriptionSummary? = null,
-    val error: String? = null
+    val error: String? = null,
+    val isSaving: Boolean = false,
+    val saveSuccess: Boolean = false,
+    val saveError: String? = null
 )

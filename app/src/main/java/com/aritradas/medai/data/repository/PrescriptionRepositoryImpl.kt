@@ -10,14 +10,18 @@ import com.aritradas.medai.BuildConfig
 import com.aritradas.medai.domain.model.GeminiPrescriptionResponse
 import com.aritradas.medai.domain.model.Medication
 import com.aritradas.medai.domain.model.PrescriptionSummary
+import com.aritradas.medai.domain.model.SavedPrescription
 import com.aritradas.medai.domain.repository.PrescriptionRepository
 import com.aritradas.medai.utils.Resource
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.content
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -33,6 +37,8 @@ class PrescriptionRepositoryImpl @Inject constructor(
     )
 
     private val gson = Gson()
+    private val firestore = FirebaseFirestore.getInstance()
+    private val auth = FirebaseAuth.getInstance()
 
     override suspend fun validatePrescription(imageUri: Uri): Resource<Boolean> {
         return withContext(Dispatchers.IO) {
@@ -147,6 +153,36 @@ class PrescriptionRepositoryImpl @Inject constructor(
 
             } catch (e: Exception) {
                 Resource.Error("Failed to analyze prescription: ${e.message}")
+            }
+        }
+    }
+
+    override suspend fun savePrescription(prescription: SavedPrescription): Resource<String> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val currentUser = auth.currentUser
+
+                if (currentUser == null) {
+                    return@withContext Resource.Error("User not authenticated. Please log in to save prescriptions.")
+                }
+
+                val prescriptionData = hashMapOf(
+                    "summary" to prescription.summary,
+                    "savedAt" to prescription.savedAt,
+                    "title" to prescription.title,
+                    "userId" to currentUser.uid
+                )
+
+                val documentRef = firestore
+                    .collection("users")
+                    .document(currentUser.uid)
+                    .collection("prescriptions")
+                    .add(prescriptionData)
+                    .await()
+
+                Resource.Success(documentRef.id)
+            } catch (e: Exception) {
+                Resource.Error("Failed to save prescription: ${e.message}")
             }
         }
     }
