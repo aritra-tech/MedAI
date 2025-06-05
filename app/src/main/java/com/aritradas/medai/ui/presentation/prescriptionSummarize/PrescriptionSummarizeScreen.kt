@@ -137,9 +137,14 @@ fun PrescriptionSummarizeScreen(
         }
         Unit
     }
+    prescriptionViewModel.setOnSaveSuccessCallback {
+        navController.popBackStack()
+    }
 
     Scaffold(
-        modifier = Modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
+        modifier = Modifier
+            .fillMaxSize()
+            .nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             LargeTopAppBar(
                 title = {
@@ -414,22 +419,6 @@ fun PrescriptionSummarizeScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
         }
-    }
-
-    // Save success dialog
-    if (uiState.saveSuccess) {
-        AlertDialog(
-            onDismissRequest = { prescriptionViewModel.clearSaveStatus() },
-            title = { Text("Saved Successfully") },
-            text = { Text("Your prescription summary has been saved to your account.") },
-            confirmButton = {
-                TextButton(onClick = { prescriptionViewModel.clearSaveStatus() }) {
-                    Text(
-                        text = "Okay"
-                    )
-                }
-            }
-        )
     }
 
     // Save error dialog

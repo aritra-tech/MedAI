@@ -30,6 +30,12 @@ class PrescriptionSummarizeViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(PrescriptionUiState())
     val uiState: StateFlow<PrescriptionUiState> = _uiState.asStateFlow()
 
+    private var onSaveSuccess: (() -> Unit)? = null
+
+    fun setOnSaveSuccessCallback(callback: () -> Unit) {
+        onSaveSuccess = callback
+    }
+
     fun validateAndAnalyzePrescription(imageUri: Uri) {
         viewModelScope.launch {
             // First do basic image validation
@@ -169,6 +175,8 @@ class PrescriptionSummarizeViewModel @Inject constructor(
                         isSaving = false,
                         saveSuccess = true
                     )
+                    // Trigger navigation callback
+                    onSaveSuccess?.invoke()
                 }
 
                 is Resource.Error -> {

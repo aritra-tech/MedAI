@@ -135,6 +135,10 @@ fun PrescriptionScreen(
         }
     }
 
+    LaunchedEffect(Unit) {
+        viewModel.loadPrescriptions()
+    }
+
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(

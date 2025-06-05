@@ -20,10 +20,6 @@ class PrescriptionViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(PrescriptionListUiState())
     val uiState: StateFlow<PrescriptionListUiState> = _uiState.asStateFlow()
 
-    init {
-        loadPrescriptions()
-    }
-
     fun loadPrescriptions() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
