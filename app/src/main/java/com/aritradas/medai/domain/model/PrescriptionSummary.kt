@@ -10,6 +10,7 @@ data class Medication(
 )
 
 data class PrescriptionSummary(
+    val doctorName: String = "",
     val medications: List<Medication>,
     val dosageInstructions: List<String>,
     val summary: String,

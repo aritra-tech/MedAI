@@ -95,6 +95,7 @@ class PrescriptionRepositoryImpl @Inject constructor(
                     Please respond ONLY with valid JSON in exactly this format (no additional text or markdown):
                     
                     {
+                        "doctorName": "Dr. [Name] (extract the doctor's full name from the prescription, if not clearly visible use 'Unknown Doctor')",
                         "patientInfo": {
                             "name": "Full name of the patient",
                             "age": "Age with units (e.g., 22 years)",
@@ -132,6 +133,7 @@ class PrescriptionRepositoryImpl @Inject constructor(
                         "summary": "Summarize the entire prescription in plain, easy-to-understand English. Include what the patient is suffering from, what medications are prescribed, for how long, how they should be taken, and any precautions to follow."
                     }
                     If you cannot clearly read certain information, use "Not clearly visible" for that field.
+                    For doctorName, look for signatures, printed names, letterheads, or any doctor identification. If found, format as "Dr. [Full Name]". If not clear, use "Unknown Doctor".
                     Ensure the medicine names exist and are valid (e.g., Chymoral Plus, Sporlac AF).
                     Translate any shorthand or symbols like "T-Back" into full medical names if possible.
                     Avoid medical jargon in the summary; use layman's terms.
@@ -223,6 +225,7 @@ class PrescriptionRepositoryImpl @Inject constructor(
                         }
 
                         val prescriptionSummary = PrescriptionSummary(
+                            doctorName = summaryMap["doctorName"] as? String ?: "Unknown Doctor",
                             medications = medications,
                             dosageInstructions = (summaryMap["dosageInstructions"] as? List<String>)
                                 ?: emptyList(),
@@ -275,6 +278,7 @@ class PrescriptionRepositoryImpl @Inject constructor(
 
             // Convert to domain model
             PrescriptionSummary(
+                doctorName = geminiResponse.doctorName,
                 medications = geminiResponse.medications.map { medication ->
                     Medication(
                         name = medication.name,
@@ -294,6 +298,7 @@ class PrescriptionRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             // Return error state
             PrescriptionSummary(
+                doctorName = "Unknown Doctor",
                 medications = emptyList(),
                 dosageInstructions = listOf("Could not parse prescription details"),
                 summary = "Failed to analyze prescription image. Raw response: ${responseText.take(100)}...",
@@ -305,6 +310,7 @@ class PrescriptionRepositoryImpl @Inject constructor(
     private fun parseFallbackResponse(responseText: String): PrescriptionSummary {
         // Fallback parsing for when JSON parsing fails
         return PrescriptionSummary(
+            doctorName = "Unknown Doctor",
             medications = extractMedicationsFromText(responseText),
             dosageInstructions = extractInstructionsFromText(responseText),
             summary = responseText.take(300) + if (responseText.length > 300) "..." else "",

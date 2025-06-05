@@ -4,7 +4,6 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,19 +27,17 @@ import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MediumTopAppBar
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.TopAppBarState
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -78,7 +75,7 @@ import java.util.Locale
 @Composable
 fun PrescriptionSummarizeScreen(
     navController: NavController,
-    prescriptionViewModel: PrescriptionViewModel = hiltViewModel()
+    prescriptionViewModel: PrescriptionSummarizeViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
@@ -427,7 +424,9 @@ fun PrescriptionSummarizeScreen(
             text = { Text("Your prescription summary has been saved to your account.") },
             confirmButton = {
                 TextButton(onClick = { prescriptionViewModel.clearSaveStatus() }) {
-                    Text("OK")
+                    Text(
+                        text = "Okay"
+                    )
                 }
             }
         )

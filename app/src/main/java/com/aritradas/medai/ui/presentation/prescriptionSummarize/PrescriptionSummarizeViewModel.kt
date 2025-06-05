@@ -22,7 +22,7 @@ import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
-class PrescriptionViewModel @Inject constructor(
+class PrescriptionSummarizeViewModel @Inject constructor(
     private val prescriptionRepository: PrescriptionRepository,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
@@ -147,8 +147,15 @@ class PrescriptionViewModel @Inject constructor(
                 saveSuccess = false
             )
 
-            val dateFormat = SimpleDateFormat("MMM dd, yyyy 'at' hh:mm a", Locale.getDefault())
-            val title = "Prescription - ${dateFormat.format(Date())}"
+            // Create title using doctor's name
+            val title =
+                if (currentSummary.doctorName.isNotBlank() && currentSummary.doctorName != "Unknown Doctor") {
+                    "${currentSummary.doctorName}'s prescription"
+                } else {
+                    val dateFormat =
+                        SimpleDateFormat("MMM dd, yyyy 'at' hh:mm a", Locale.getDefault())
+                    "Prescription - ${dateFormat.format(Date())}"
+                }
 
             val savedPrescription = SavedPrescription(
                 summary = currentSummary,
