@@ -10,4 +10,5 @@ interface PrescriptionRepository {
     suspend fun summarizePrescription(imageUri: Uri): Resource<PrescriptionSummary>
     suspend fun savePrescription(prescription: SavedPrescription): Resource<String>
     suspend fun getSavedPrescriptions(): Resource<List<SavedPrescription>>
+    suspend fun getPrescriptionById(id: String): Resource<SavedPrescription>
 }

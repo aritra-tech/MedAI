@@ -65,7 +65,8 @@ import com.aritradas.medai.ui.presentation.prescription.component.PrescriptionCa
 @Composable
 fun PrescriptionScreen(
     navController: NavController,
-    viewModel: PrescriptionViewModel = hiltViewModel()
+    viewModel: PrescriptionViewModel = hiltViewModel(),
+    navigateToDetailsScreen:(id: String) -> Unit
 ) {
 
     val context = LocalContext.current
@@ -253,7 +254,7 @@ fun PrescriptionScreen(
                             PrescriptionCard(
                                 prescription = prescription,
                                 onClick = {
-                                    // TODO: Navigate to prescription detail screen
+                                    navigateToDetailsScreen(prescription.id)
                                 }
                             )
                         }
