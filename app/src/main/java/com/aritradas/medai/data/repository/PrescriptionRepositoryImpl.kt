@@ -10,14 +10,19 @@ import com.aritradas.medai.BuildConfig
 import com.aritradas.medai.domain.model.GeminiPrescriptionResponse
 import com.aritradas.medai.domain.model.Medication
 import com.aritradas.medai.domain.model.PrescriptionSummary
+import com.aritradas.medai.domain.model.SavedPrescription
 import com.aritradas.medai.domain.repository.PrescriptionRepository
 import com.aritradas.medai.utils.Resource
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.content
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -33,6 +38,8 @@ class PrescriptionRepositoryImpl @Inject constructor(
     )
 
     private val gson = Gson()
+    private val firestore = FirebaseFirestore.getInstance()
+    private val auth = FirebaseAuth.getInstance()
 
     override suspend fun validatePrescription(imageUri: Uri): Resource<Boolean> {
         return withContext(Dispatchers.IO) {
@@ -88,6 +95,7 @@ class PrescriptionRepositoryImpl @Inject constructor(
                     Please respond ONLY with valid JSON in exactly this format (no additional text or markdown):
                     
                     {
+                        "doctorName": "Dr. [Name] (extract the doctor's full name from the prescription, if not clearly visible use 'Unknown Doctor')",
                         "patientInfo": {
                             "name": "Full name of the patient",
                             "age": "Age with units (e.g., 22 years)",
@@ -125,6 +133,7 @@ class PrescriptionRepositoryImpl @Inject constructor(
                         "summary": "Summarize the entire prescription in plain, easy-to-understand English. Include what the patient is suffering from, what medications are prescribed, for how long, how they should be taken, and any precautions to follow."
                     }
                     If you cannot clearly read certain information, use "Not clearly visible" for that field.
+                    For doctorName, look for signatures, printed names, letterheads, or any doctor identification. If found, format as "Dr. [Full Name]". If not clear, use "Unknown Doctor".
                     Ensure the medicine names exist and are valid (e.g., Chymoral Plus, Sporlac AF).
                     Translate any shorthand or symbols like "T-Back" into full medical names if possible.
                     Avoid medical jargon in the summary; use layman's terms.
@@ -147,6 +156,159 @@ class PrescriptionRepositoryImpl @Inject constructor(
 
             } catch (e: Exception) {
                 Resource.Error("Failed to analyze prescription: ${e.message}")
+            }
+        }
+    }
+
+    override suspend fun savePrescription(prescription: SavedPrescription): Resource<String> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val currentUser = auth.currentUser
+
+                if (currentUser == null) {
+                    return@withContext Resource.Error("User not authenticated. Please log in to save prescriptions.")
+                }
+
+                val prescriptionData = hashMapOf(
+                    "summary" to prescription.summary,
+                    "savedAt" to prescription.savedAt,
+                    "title" to prescription.title,
+                    "userId" to currentUser.uid
+                )
+
+                val documentRef = firestore
+                    .collection("users")
+                    .document(currentUser.uid)
+                    .collection("prescriptions")
+                    .add(prescriptionData)
+                    .await()
+
+                Resource.Success(documentRef.id)
+            } catch (e: Exception) {
+                Resource.Error("Failed to save prescription: ${e.message}")
+            }
+        }
+    }
+
+    override suspend fun getSavedPrescriptions(): Resource<List<SavedPrescription>> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val currentUser = auth.currentUser
+                if (currentUser == null) {
+                    return@withContext Resource.Error("User not authenticated")
+                }
+
+                val querySnapshot = firestore
+                    .collection("users")
+                    .document(currentUser.uid)
+                    .collection("prescriptions")
+                    .orderBy("savedAt", Query.Direction.DESCENDING)
+                    .get()
+                    .await()
+
+                val prescriptions = querySnapshot.documents.mapNotNull { document ->
+                    try {
+                        val data = document.data ?: return@mapNotNull null
+                        val summaryMap =
+                            data["summary"] as? Map<String, Any> ?: return@mapNotNull null
+
+                        // Parse the summary from Firestore data
+                        val medicationsData =
+                            summaryMap["medications"] as? List<Map<String, Any>> ?: emptyList()
+                        val medications = medicationsData.map { medMap ->
+                            Medication(
+                                name = medMap["name"] as? String ?: "",
+                                dosage = medMap["dosage"] as? String ?: "",
+                                frequency = medMap["frequency"] as? String ?: "",
+                                duration = medMap["duration"] as? String ?: ""
+                            )
+                        }
+
+                        val prescriptionSummary = PrescriptionSummary(
+                            doctorName = summaryMap["doctorName"] as? String ?: "Unknown Doctor",
+                            medications = medications,
+                            dosageInstructions = (summaryMap["dosageInstructions"] as? List<String>)
+                                ?: emptyList(),
+                            summary = summaryMap["summary"] as? String ?: "",
+                            warnings = (summaryMap["warnings"] as? List<String>) ?: emptyList()
+                        )
+
+                        SavedPrescription(
+                            id = document.id,
+                            summary = prescriptionSummary,
+                            savedAt = (data["savedAt"] as? com.google.firebase.Timestamp)?.toDate()
+                                ?: java.util.Date(),
+                            title = data["title"] as? String ?: "Untitled Prescription"
+                        )
+                    } catch (e: Exception) {
+                        null // Skip malformed documents
+                    }
+                }
+
+                Resource.Success(prescriptions)
+            } catch (e: Exception) {
+                Resource.Error("Failed to fetch prescriptions: ${e.message}")
+            }
+        }
+    }
+
+    override suspend fun getPrescriptionById(id: String): Resource<SavedPrescription> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val currentUser = auth.currentUser
+                if (currentUser == null) {
+                    return@withContext Resource.Error("User not authenticated")
+                }
+
+                val document = firestore
+                    .collection("users")
+                    .document(currentUser.uid)
+                    .collection("prescriptions")
+                    .document(id)
+                    .get()
+                    .await()
+
+                if (!document.exists()) {
+                    return@withContext Resource.Error("Prescription not found")
+                }
+
+                val data =
+                    document.data ?: return@withContext Resource.Error("Invalid prescription data")
+                val summaryMap = data["summary"] as? Map<String, Any>
+                    ?: return@withContext Resource.Error("Invalid summary data")
+
+                // Parse the summary from Firestore data
+                val medicationsData =
+                    summaryMap["medications"] as? List<Map<String, Any>> ?: emptyList()
+                val medications = medicationsData.map { medMap ->
+                    Medication(
+                        name = medMap["name"] as? String ?: "",
+                        dosage = medMap["dosage"] as? String ?: "",
+                        frequency = medMap["frequency"] as? String ?: "",
+                        duration = medMap["duration"] as? String ?: ""
+                    )
+                }
+
+                val prescriptionSummary = PrescriptionSummary(
+                    doctorName = summaryMap["doctorName"] as? String ?: "Unknown Doctor",
+                    medications = medications,
+                    dosageInstructions = (summaryMap["dosageInstructions"] as? List<String>)
+                        ?: emptyList(),
+                    summary = summaryMap["summary"] as? String ?: "",
+                    warnings = (summaryMap["warnings"] as? List<String>) ?: emptyList()
+                )
+
+                val prescription = SavedPrescription(
+                    id = document.id,
+                    summary = prescriptionSummary,
+                    savedAt = (data["savedAt"] as? com.google.firebase.Timestamp)?.toDate()
+                        ?: java.util.Date(),
+                    title = data["title"] as? String ?: "Untitled Prescription"
+                )
+
+                Resource.Success(prescription)
+            } catch (e: Exception) {
+                Resource.Error("Failed to fetch prescription: ${e.message}")
             }
         }
     }
@@ -177,6 +339,7 @@ class PrescriptionRepositoryImpl @Inject constructor(
 
             // Convert to domain model
             PrescriptionSummary(
+                doctorName = geminiResponse.doctorName,
                 medications = geminiResponse.medications.map { medication ->
                     Medication(
                         name = medication.name,
@@ -196,6 +359,7 @@ class PrescriptionRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             // Return error state
             PrescriptionSummary(
+                doctorName = "Unknown Doctor",
                 medications = emptyList(),
                 dosageInstructions = listOf("Could not parse prescription details"),
                 summary = "Failed to analyze prescription image. Raw response: ${responseText.take(100)}...",
@@ -207,6 +371,7 @@ class PrescriptionRepositoryImpl @Inject constructor(
     private fun parseFallbackResponse(responseText: String): PrescriptionSummary {
         // Fallback parsing for when JSON parsing fails
         return PrescriptionSummary(
+            doctorName = "Unknown Doctor",
             medications = extractMedicationsFromText(responseText),
             dosageInstructions = extractInstructionsFromText(responseText),
             summary = responseText.take(300) + if (responseText.length > 300) "..." else "",

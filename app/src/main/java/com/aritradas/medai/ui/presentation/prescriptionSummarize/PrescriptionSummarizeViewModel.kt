@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.aritradas.medai.domain.model.SavedPrescription
 import com.aritradas.medai.domain.repository.PrescriptionRepository
 import com.aritradas.medai.ui.presentation.prescriptionSummarize.state.PrescriptionUiState
 import com.aritradas.medai.utils.ImageValidator
@@ -15,16 +16,25 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
-class PrescriptionViewModel @Inject constructor(
+class PrescriptionSummarizeViewModel @Inject constructor(
     private val prescriptionRepository: PrescriptionRepository,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PrescriptionUiState())
     val uiState: StateFlow<PrescriptionUiState> = _uiState.asStateFlow()
+
+    private var onSaveSuccess: (() -> Unit)? = null
+
+    fun setOnSaveSuccessCallback(callback: () -> Unit) {
+        onSaveSuccess = callback
+    }
 
     fun validateAndAnalyzePrescription(imageUri: Uri) {
         viewModelScope.launch {
@@ -130,6 +140,65 @@ class PrescriptionViewModel @Inject constructor(
             summary = null,
             isValidPrescription = null,
             validationError = null
+        )
+    }
+
+    fun savePrescription() {
+        val currentSummary = _uiState.value.summary ?: return
+
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                isSaving = true,
+                saveError = null,
+                saveSuccess = false
+            )
+
+            // Create title using doctor's name
+            val title =
+                if (currentSummary.doctorName.isNotBlank() && currentSummary.doctorName != "Unknown Doctor") {
+                    "${currentSummary.doctorName}'s prescription"
+                } else {
+                    val dateFormat =
+                        SimpleDateFormat("MMM dd, yyyy 'at' hh:mm a", Locale.getDefault())
+                    "Prescription - ${dateFormat.format(Date())}"
+                }
+
+            val savedPrescription = SavedPrescription(
+                summary = currentSummary,
+                title = title,
+                savedAt = Date()
+            )
+
+            when (val result = prescriptionRepository.savePrescription(savedPrescription)) {
+                is Resource.Success -> {
+                    _uiState.value = _uiState.value.copy(
+                        isSaving = false,
+                        saveSuccess = true
+                    )
+                    // Trigger navigation callback
+                    onSaveSuccess?.invoke()
+                }
+
+                is Resource.Error -> {
+                    _uiState.value = _uiState.value.copy(
+                        isSaving = false,
+                        saveError = result.message
+                    )
+                }
+
+                is Resource.Loading -> {
+                    _uiState.value = _uiState.value.copy(
+                        isSaving = true
+                    )
+                }
+            }
+        }
+    }
+
+    fun clearSaveStatus() {
+        _uiState.value = _uiState.value.copy(
+            saveSuccess = false,
+            saveError = null
         )
     }
 }

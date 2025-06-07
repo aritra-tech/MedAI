@@ -32,13 +32,12 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MediumTopAppBar
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.TopAppBarState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -76,7 +75,7 @@ import java.util.Locale
 @Composable
 fun PrescriptionSummarizeScreen(
     navController: NavController,
-    prescriptionViewModel: PrescriptionViewModel = hiltViewModel()
+    prescriptionViewModel: PrescriptionSummarizeViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
@@ -138,12 +137,16 @@ fun PrescriptionSummarizeScreen(
         }
         Unit
     }
+    prescriptionViewModel.setOnSaveSuccessCallback {
+        navController.popBackStack()
+    }
 
     Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        modifier = Modifier
+            .fillMaxSize()
+            .nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            MediumTopAppBar(
-                modifier = Modifier.fillMaxWidth(),
+            LargeTopAppBar(
                 title = {
                     Text(
                         text = "Scan Prescription",
@@ -157,6 +160,31 @@ fun PrescriptionSummarizeScreen(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back"
                         )
+                    }
+                },
+                actions = {
+                    // Show save button only when summary is available
+                    uiState.summary?.let {
+                        IconButton(
+                            onClick = { prescriptionViewModel.savePrescription() },
+                            enabled = !uiState.isSaving
+                        ) {
+                            if (uiState.isSaving) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.Check,
+                                    contentDescription = "Save prescription",
+                                    tint = if (uiState.saveSuccess)
+                                        MaterialTheme.colorScheme.primary
+                                    else
+                                        MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
                     }
                 },
                 scrollBehavior = scrollBehavior,
@@ -278,7 +306,9 @@ fun PrescriptionSummarizeScreen(
 
             Button(
                 onClick = handleSummarize,
-                modifier = Modifier.fillMaxWidth().height(50.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
                 enabled = imageUri != null && !uiState.isLoading && !uiState.isValidating
             ) {
                 when {
@@ -389,6 +419,20 @@ fun PrescriptionSummarizeScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
         }
+    }
+
+    // Save error dialog
+    uiState.saveError?.let { error ->
+        AlertDialog(
+            onDismissRequest = { prescriptionViewModel.clearSaveStatus() },
+            title = { Text("Save Failed") },
+            text = { Text(error) },
+            confirmButton = {
+                TextButton(onClick = { prescriptionViewModel.clearSaveStatus() }) {
+                    Text("OK")
+                }
+            }
+        )
     }
 
     // Validation error dialog

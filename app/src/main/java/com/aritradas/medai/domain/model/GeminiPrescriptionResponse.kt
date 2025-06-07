@@ -10,6 +10,7 @@ data class GeminiMedicationResponse(
 )
 
 data class GeminiPrescriptionResponse(
+    @SerializedName("doctorName") val doctorName: String = "",
     @SerializedName("medications") val medications: List<GeminiMedicationResponse> = emptyList(),
     @SerializedName("dosageInstructions") val dosageInstructions: List<String> = emptyList(),
     @SerializedName("summary") val summary: String = "",
