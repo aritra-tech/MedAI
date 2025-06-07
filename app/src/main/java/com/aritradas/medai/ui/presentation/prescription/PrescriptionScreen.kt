@@ -18,22 +18,28 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Assignment
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Clear
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -50,9 +56,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -138,12 +141,10 @@ fun PrescriptionScreen(
             permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
         
-        // Request camera permission
         if (!hasCameraPermission) {
             cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
         }
         
-        // Request storage permission based on Android version
         if (!hasStoragePermission) {
             val storagePermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 Manifest.permission.READ_MEDIA_IMAGES
@@ -159,6 +160,36 @@ fun PrescriptionScreen(
     }
 
     Scaffold(
+        topBar = {
+            OutlinedTextField(
+                value = uiState.searchQuery,
+                onValueChange = viewModel::searchPrescriptions,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                placeholder = { Text("Search prescriptions...") },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Outlined.Search,
+                        contentDescription = "Search"
+                    )
+                },
+                trailingIcon = {
+                    if (uiState.searchQuery.isNotEmpty()) {
+                        IconButton(
+                            onClick = { viewModel.searchPrescriptions("") }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Clear,
+                                contentDescription = "Clear search"
+                            )
+                        }
+                    }
+                },
+                shape = RoundedCornerShape(12.dp),
+                singleLine = true
+            )
+        },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { 
@@ -174,89 +205,125 @@ fun PrescriptionScreen(
             }
         }
     ) { paddingValues ->
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            when {
-                uiState.isLoading -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                }
 
-                uiState.prescriptions.isEmpty() -> {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        val transition = rememberInfiniteTransition(
-                            label = "Prescription rotate"
-                        )
-                        val angle by transition.animateFloat(
-                            initialValue = 0f,
-                            targetValue = 360f,
-                            animationSpec = infiniteRepeatable(
-                                animation = tween(durationMillis = 10000, easing = LinearEasing),
-                                repeatMode = RepeatMode.Restart
-                            ),
-                            label = "Prescription animation"
-                        )
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Spacer(
-                                    Modifier
-                                        .graphicsLayer {
-                                            rotationZ = angle
-                                        }
-                                        .clip(MaterialShapes.Cookie12Sided.toShape())
-                                        .background(colorScheme.primaryContainer)
-                                        .padding(32.dp)
-                                        .size(100.dp)
-                                )
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Outlined.Assignment,
-                                    contentDescription = null,
-                                    tint = colorScheme.onPrimaryContainer,
-                                    modifier = Modifier
-                                        .padding(32.dp)
-                                        .size(100.dp)
-                                )
-                            }
-                            Text(
-                                text = "No Prescriptions saved",
-                                textAlign = TextAlign.Center,
-                                style = MaterialTheme.typography.titleLarge,
-                                modifier = Modifier.padding(8.dp)
-                            )
-                            Text(
-                                text = "Tap the + button to scan your first prescription",
-                                textAlign = TextAlign.Center,
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier.padding(horizontal = 48.dp)
-                            )
+            Box(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                when {
+                    uiState.isLoading -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
                         }
                     }
-                }
 
-                else -> {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        items(uiState.prescriptions) { prescription ->
-                            PrescriptionCard(
-                                prescription = prescription,
-                                onClick = {
-                                    navigateToDetailsScreen(prescription.id)
-                                }
+                    uiState.filteredPrescriptions.isEmpty() && uiState.prescriptions.isEmpty() -> {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            val transition = rememberInfiniteTransition(
+                                label = "Prescription rotate"
                             )
+                            val angle by transition.animateFloat(
+                                initialValue = 0f,
+                                targetValue = 360f,
+                                animationSpec = infiniteRepeatable(
+                                    animation = tween(
+                                        durationMillis = 10000,
+                                        easing = LinearEasing
+                                    ),
+                                    repeatMode = RepeatMode.Restart
+                                ),
+                                label = "Prescription animation"
+                            )
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Spacer(
+                                        Modifier
+                                            .graphicsLayer {
+                                                rotationZ = angle
+                                            }
+                                            .clip(MaterialShapes.Cookie12Sided.toShape())
+                                            .background(colorScheme.primaryContainer)
+                                            .padding(32.dp)
+                                            .size(100.dp)
+                                    )
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Outlined.Assignment,
+                                        contentDescription = null,
+                                        tint = colorScheme.onPrimaryContainer,
+                                        modifier = Modifier
+                                            .padding(32.dp)
+                                            .size(100.dp)
+                                    )
+                                }
+                                Text(
+                                    text = "No Prescriptions saved",
+                                    textAlign = TextAlign.Center,
+                                    style = MaterialTheme.typography.titleLarge,
+                                    modifier = Modifier.padding(8.dp)
+                                )
+                                Text(
+                                    text = "Tap the + button to scan your first prescription",
+                                    textAlign = TextAlign.Center,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    modifier = Modifier.padding(horizontal = 48.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    uiState.filteredPrescriptions.isEmpty() && uiState.searchQuery.isNotEmpty() -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Search,
+                                    contentDescription = null,
+                                    tint = colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(64.dp)
+                                )
+                                Text(
+                                    text = "No prescriptions found",
+                                    textAlign = TextAlign.Center,
+                                    style = MaterialTheme.typography.titleLarge,
+                                    modifier = Modifier.padding(8.dp)
+                                )
+                                Text(
+                                    text = "Try adjusting your search terms",
+                                    textAlign = TextAlign.Center,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+
+                    else -> {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(uiState.filteredPrescriptions) { prescription ->
+                                PrescriptionCard(
+                                    prescription = prescription,
+                                    onClick = {
+                                        navigateToDetailsScreen(prescription.id)
+                                    }
+                                )
+                            }
                         }
                     }
                 }
