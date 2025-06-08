@@ -16,7 +16,6 @@ android {
     namespace = "com.aritradas.medai"
     compileSdk = 35
 
-    buildFeatures.buildConfig = true
     defaultConfig {
         applicationId = "com.aritradas.medai"
         minSdk = 24
