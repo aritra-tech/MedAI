@@ -23,6 +23,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -32,12 +33,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.aritradas.medai.MainActivity
+import com.aritradas.medai.R
 import com.aritradas.medai.navigation.Screens
 import com.aritradas.medai.ui.presentation.profile.components.SettingsCard
 import com.aritradas.medai.ui.presentation.profile.components.SettingsItemGroup
+import com.aritradas.medai.ui.presentation.settings.component.SwitchCard
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,6 +56,7 @@ fun SettingsScreen(
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     val onLogOutComplete by settingsViewModel.onLogOutComplete.observeAsState(false)
     val onDeleteAccountComplete by settingsViewModel.onDeleteAccountComplete.observeAsState(false)
+    val biometricAuthState by settingsViewModel.biometricAuthState.collectAsState()
     var openLogoutDialog by remember { mutableStateOf(false) }
     var openDeleteAccountDialog by remember { mutableStateOf(false) }
 
@@ -196,25 +202,25 @@ fun SettingsScreen(
                 .padding(horizontal = 16.dp)
                 .padding(paddingValues)
         ) {
-//            Text(
-//                modifier = Modifier
-//                    .fillMaxWidth(),
-//                text = stringResource(id = R.string.security)
-//            )
-//
-//            Spacer(modifier = Modifier.height(12.dp))
-//
-//            SettingsItemGroup {
-//
-//                SwitchCard(
-//                    itemName = stringResource(R.string.biometric_unlock),
-//                    itemSubText = stringResource(R.string.use_biometric_to_unlock_the_app),
-//                    isChecked = biometricAuthState,
-//                    onChecked = {
-//                        settingsViewModel.showBiometricPrompt(context as MainActivity)
-//                    }
-//                )
-//            }
+            Text(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                text = stringResource(id = R.string.security)
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            SettingsItemGroup {
+
+                SwitchCard(
+                    itemName = stringResource(R.string.biometric_unlock),
+                    itemSubText = stringResource(R.string.use_biometric_to_unlock_the_app),
+                    isChecked = biometricAuthState,
+                    onChecked = {
+                        settingsViewModel.showBiometricPrompt(context as MainActivity)
+                    }
+                )
+            }
 
             Text(
                 modifier = Modifier

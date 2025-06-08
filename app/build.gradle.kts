@@ -99,6 +99,12 @@ dependencies {
     //Gson
     implementation(libs.gson)
 
+    //DataStore
+    implementation(libs.androidx.datastore.preferences)
+
+    // Biometric
+    implementation(libs.androidx.biometric)
+
     //Test
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
