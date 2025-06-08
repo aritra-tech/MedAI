@@ -51,6 +51,18 @@ android {
     }
 }
 
+detekt {
+    buildUponDefaultConfig = true
+    allRules = false
+}
+
+tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
+    jvmTarget = "17"
+
+    // Don't fail build on issues, just generate reports
+    ignoreFailures = true
+}
+
 dependencies {
 
     implementation(libs.androidx.core.ktx)
