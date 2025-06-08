@@ -63,6 +63,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.aritradas.medai.navigation.Screens
 import com.aritradas.medai.ui.presentation.prescription.component.PrescriptionCard
+import com.aritradas.medai.ui.presentation.prescription.component.PrescriptionCardShimmer
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -216,11 +217,14 @@ fun PrescriptionScreen(
             ) {
                 when {
                     uiState.isLoading -> {
-                        Box(
+                        LazyColumn(
                             modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
+                            contentPadding = PaddingValues(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            CircularProgressIndicator()
+                            items(12) {
+                                PrescriptionCardShimmer()
+                            }
                         }
                     }
 
