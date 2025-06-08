@@ -39,7 +39,7 @@ object AppModule {
     }
 
     @Provides
-    fun provideAppBioMetricManager(context: Context): AppBioMetricManager {
+    fun provideAppBioMetricManager(@ApplicationContext context: Context): AppBioMetricManager {
         return AppBioMetricManager(context)
     }
 }
