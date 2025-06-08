@@ -14,4 +14,7 @@ object Constants {
 
     const val ANIMATION_DURATION = 1000
     const val SPLASH_DELAY = 1000L
+
+    const val TERMS_AND_CONDITIONS = "https://www.freeprivacypolicy.com/live/aac1e8c9-0eaf-4efa-87cc-c7cf2ddae29b"
+    const val PRIVACY_POLICY = "https://www.freeprivacypolicy.com/live/6974b6ca-8e44-4fc3-b33b-53ef9eb988ca"
 }

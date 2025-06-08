@@ -5,5 +5,6 @@
     <string name="terms_conditions"><![CDATA[Terms & Conditions]]></string>
     <string name="privacy_policy">Privacy Policy</string>
     <string name="take_a_photo_of_your_prescription_or_upload_an_existing_image">Take a photo of your prescription or upload an existing image.</string>
+    <string name="mailTo">mailto:medai.summarizer@gmail.com?Subject=Your%20feedback%20is%20important%20to%20us%21</string>
     <string name="upload_a_prescription">Upload a prescription</string>
 </resources>
