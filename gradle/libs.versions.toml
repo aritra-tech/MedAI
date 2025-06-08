@@ -3,6 +3,7 @@ agp = "8.10.0"
 biometric = "1.2.0-alpha05"
 coilCompose = "2.7.0"
 datastorePreferences = "1.1.2"
+detekt = "1.23.4"
 firebaseBom = "33.14.0"
 material3 = "1.4.0-alpha15"
 gson = "2.11.0"
@@ -76,3 +77,4 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 google-firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "googleFirebaseCrashlytics" }
+detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
