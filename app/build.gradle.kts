@@ -1,3 +1,5 @@
+import org.gradle.kotlin.dsl.implementation
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -5,20 +7,27 @@ plugins {
     id("com.google.devtools.ksp")
     id("com.google.gms.google-services")
     id("dagger.hilt.android.plugin")
+    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
+    alias(libs.plugins.google.firebase.crashlytics)
+    id("io.gitlab.arturbosch.detekt")
 }
 
 android {
     namespace = "com.aritradas.medai"
     compileSdk = 35
 
+    buildFeatures.buildConfig = true
     defaultConfig {
         applicationId = "com.aritradas.medai"
         minSdk = 24
         targetSdk = 35
         versionCode = 1
-        versionName = "1.0"
+        versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        
+        // Add BuildConfig field for Gemini API key
+        buildConfigField("String", "GEMINI_API_KEY", "\"${project.findProperty("GEMINI_API_KEY") ?: ""}\"")
     }
 
     buildTypes {
@@ -39,6 +48,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -53,6 +63,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.material.icons.extended)
+    implementation(libs.androidx.runtime.livedata)
 
     //Navigation
     implementation(libs.androidx.navigation.compose)
@@ -70,9 +81,30 @@ dependencies {
     implementation(libs.androidx.credentials.play.services.auth)
     implementation(libs.googleid)
     implementation(libs.play.services.auth)
+    implementation(libs.firebase.firestore)
+    implementation(libs.firebase.crashlytics)
+    implementation(libs.firebase.messaging)
 
     // Timber
     implementation (libs.timber)
+
+    // Coil
+    implementation(libs.coil.compose)
+
+    // Gemini
+    implementation(libs.generativeai)
+
+    // Coroutine
+    implementation (libs.kotlinx.coroutines.android)
+
+    //Gson
+    implementation(libs.gson)
+
+    //DataStore
+    implementation(libs.androidx.datastore.preferences)
+
+    // Biometric
+    implementation(libs.androidx.biometric)
 
     //Test
     testImplementation(libs.junit)
