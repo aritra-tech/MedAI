@@ -2,6 +2,7 @@ package com.aritradas.medai.data.repository
 
 import com.aritradas.medai.domain.repository.AuthRepository
 import com.aritradas.medai.utils.Resource
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
@@ -11,6 +12,7 @@ import javax.inject.Inject
 
 class AuthRepositoryImpl @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
+    private val googleSignInClient: GoogleSignInClient
 ) : AuthRepository {
 
     override suspend fun signInWithGoogle(idToken: String): Resource<AuthResult> {
@@ -44,6 +46,7 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun signOut(): Resource<Unit> {
         return try {
             firebaseAuth.signOut()
+            googleSignInClient.signOut().await()
             Resource.Success(Unit)
         } catch (e: Exception) {
             Resource.Error(e.message ?: "An unknown error occurred during sign out.")

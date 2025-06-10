@@ -16,4 +16,8 @@
     <string name="security">Security</string>
     <string name="biometric_unlock">Biometric unlock</string>
     <string name="use_biometric_to_unlock_the_app">Use biometric to unlock the app</string>
+    <string name="are_you_sure_you_want_to_delete_your_account_this_action_is_irreversible">Are you sure you want to delete your account? This action is irreversible.</string>
+    <string name="delete_account">Delete Account</string>
+    <string name="are_you_sure_you_want_to_logout">Are you sure you want to logout?</string>
+    <string name="logout">Logout</string>
 </resources>
