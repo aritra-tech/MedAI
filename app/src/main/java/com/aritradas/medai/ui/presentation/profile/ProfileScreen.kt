@@ -20,15 +20,17 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.aritradas.medai.BuildConfig
-import com.aritradas.medai.domain.model.UserData
 import com.aritradas.medai.navigation.Screens
 import com.aritradas.medai.ui.presentation.profile.components.SettingsCard
 import com.aritradas.medai.ui.presentation.profile.components.SettingsItemGroup
@@ -36,8 +38,10 @@ import com.aritradas.medai.ui.presentation.profile.components.SettingsItemGroup
 @Composable
 fun ProfileScreen(
     navController: NavController,
-    userData: UserData?
+    viewModel: ProfileViewModel = hiltViewModel()
 ) {
+    val userData by viewModel.userData.collectAsState()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -61,9 +65,9 @@ fun ProfileScreen(
                 ) {
 
                     Box(contentAlignment = Alignment.BottomEnd) {
-                        if(userData?.profilePictureUrl != null) {
+                        userData?.profilePictureUrl?.let { imageUrl ->
                             AsyncImage(
-                                model = userData.profilePictureUrl,
+                                model = imageUrl,
                                 contentDescription = "Profile picture",
                                 modifier = Modifier
                                     .size(110.dp)
@@ -75,9 +79,9 @@ fun ProfileScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    if (userData?.username != null) {
+                    userData?.username?.let { name ->
                         Text(
-                            text = userData.username,
+                            text = name,
                             style = MaterialTheme.typography.titleLarge
                         )
                     }

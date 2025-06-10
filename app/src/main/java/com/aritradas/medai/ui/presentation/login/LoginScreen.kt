@@ -1,9 +1,11 @@
 package com.aritradas.medai.ui.presentation.login
 
-import android.app.Activity.RESULT_OK
+import android.app.Activity
+import android.app.ProgressDialog
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -17,16 +19,24 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.BlendMode.Companion.Screen
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -35,56 +45,98 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.aritradas.medai.R
 import com.aritradas.medai.navigation.Screens
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.common.api.ApiException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun LoginScreen(
     navController: NavController,
-    googleAuthUiClient: GoogleAuthUiClient,
-    loginViewModel: LoginViewModel = hiltViewModel(),
+    viewModel: LoginViewModel = hiltViewModel(),
 ) {
-    val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val state by loginViewModel.state.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+    val activity = LocalActivity.current
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartIntentSenderForResult(),
-        onResult = { result ->
-            if (result.resultCode == RESULT_OK) {
-                scope.launch {
-                    val signInResult = googleAuthUiClient.signInWithIntent(
-                        intent = result.data ?: return@launch
-                    )
-                    loginViewModel.onSignInResult(signInResult)
+    var backPressedState by remember { mutableStateOf(false) }
+
+    val googleSignInLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+            try {
+                val account = task.getResult(ApiException::class.java)
+                val idToken = account.idToken
+                if (idToken != null) {
+                    viewModel.signInWithGoogle(idToken)
+                } else {
+                    viewModel.resetLoginState()
+                    Toast.makeText(context,
+                        context.getString(R.string.google_sign_in_failed_no_id_token), Toast.LENGTH_LONG)
+                        .show()
                 }
+            } catch (e: ApiException) {
+                viewModel.resetLoginState()
+                Toast.makeText(context, "Google Sign-In failed: ${e.statusCode}", Toast.LENGTH_LONG)
+                    .show()
             }
-        }
-    )
-
-    LaunchedEffect(key1 = state.isSignInSuccessful) {
-        if (state.isSignInSuccessful) {
-            Toast.makeText(
-                context,
-                "Sign in successful",
-                Toast.LENGTH_LONG
-            ).show()
-
-            navController.navigate(Screens.Prescription.route)
-            loginViewModel.resetState()
+        } else {
+            viewModel.resetLoginState()
+            Toast.makeText(context,
+                context.getString(R.string.google_sign_in_cancelled), Toast.LENGTH_SHORT).show()
         }
     }
 
-    LaunchedEffect(key1 = state.signInError) {
-        state.signInError?.let { error ->
-            Toast.makeText(
-                context,
-                error,
-                Toast.LENGTH_LONG
-            ).show()
+    LaunchedEffect(Unit) {
+        viewModel.logout()
+    }
+
+    LaunchedEffect(uiState.error) {
+        uiState.error?.let { errorMessage ->
+            snackbarHostState.showSnackbar(
+                message = errorMessage,
+                actionLabel = context.getString(R.string.dismiss)
+            )
+            viewModel.onErrorMessageHandled()
         }
+    }
+
+    LaunchedEffect(uiState.isLoginSuccess) {
+        if (uiState.isLoginSuccess) {
+            navController.navigate(Screens.Prescription.route) {
+                popUpTo(Screens.Login.route) {
+                    inclusive = true
+                }
+            }
+        }
+    }
+
+    BackHandler {
+        if (backPressedState) {
+            activity?.finish()
+        } else {
+            backPressedState = true
+            Toast.makeText(context,
+                context.getString(R.string.press_back_again_to_exit), Toast.LENGTH_SHORT).show()
+
+            scope.launch {
+                delay(2.seconds)
+                backPressedState = false
+            }
+        }
+    }
+
+    if (uiState.isLoading) {
+        LinearProgressIndicator()
     }
 
     Surface(
@@ -113,13 +165,7 @@ fun LoginScreen(
 
             OutlinedButton(
                 onClick = {
-                    scope.launch {
-                        val signInIntentSender = googleAuthUiClient.signIn()
-                        launcher.launch(
-                            IntentSenderRequest.Builder(
-                                signInIntentSender ?: return@launch
-                            ).build())
-                    }
+                    googleSignInLauncher.launch(viewModel.getGoogleSignInIntent())
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -127,7 +173,8 @@ fun LoginScreen(
                 shape = MaterialTheme.shapes.medium,
                 colors = ButtonDefaults.outlinedButtonColors(
                     contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                ),
+                enabled = !uiState.isLoading
             ) {
                 Icon(
                     imageVector = ImageVector.vectorResource(id = R.drawable.google_color_icon),
@@ -137,10 +184,16 @@ fun LoginScreen(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Continue with Google",
+                    text = "Sign in with Google",
                     style = MaterialTheme.typography.titleMedium
                 )
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            SnackbarHost(hostState = snackbarHostState, modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .padding(16.dp))
         }
     }
 }

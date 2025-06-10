@@ -13,7 +13,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.aritradas.medai.ui.presentation.login.GoogleAuthUiClient
 import com.aritradas.medai.ui.presentation.login.LoginScreen
 import com.aritradas.medai.ui.presentation.prescription.PrescriptionScreen
 import com.aritradas.medai.ui.presentation.prescriptionDetails.PrescriptionDetailsScreen
@@ -24,7 +23,7 @@ import com.aritradas.medai.ui.presentation.settings.SettingsScreen
 import com.aritradas.medai.ui.presentation.splash.SplashScreen
 
 @Composable
-fun Navigation(googleAuthUiClient: GoogleAuthUiClient) {
+fun Navigation() {
 
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -52,8 +51,7 @@ fun Navigation(googleAuthUiClient: GoogleAuthUiClient) {
         ) {
             composable(Screens.Splash.route) {
                 SplashScreen(
-                    navController = navController,
-                    googleAuthUiClient = googleAuthUiClient
+                    navController = navController
                 )
             }
             
@@ -63,8 +61,7 @@ fun Navigation(googleAuthUiClient: GoogleAuthUiClient) {
             
             composable(Screens.Login.route) {
                 LoginScreen(
-                    navController = navController,
-                    googleAuthUiClient = googleAuthUiClient
+                    navController = navController
                 )
             }
             
@@ -97,8 +94,7 @@ fun Navigation(googleAuthUiClient: GoogleAuthUiClient) {
             
             composable(Screens.Profile.route) {
                 ProfileScreen(
-                    navController = navController,
-                    userData = googleAuthUiClient.getSignedInUser()
+                    navController = navController
                 )
             }
             

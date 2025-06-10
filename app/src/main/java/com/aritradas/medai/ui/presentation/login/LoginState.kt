@@ -1,6 +1,7 @@
 package com.aritradas.medai.ui.presentation.login
 
 data class LoginState(
-    val isSignInSuccessful: Boolean = false,
-    val signInError: String? = null
+    val isLoading: Boolean = false,
+    val error: String? = null,
+    val isLoginSuccess: Boolean = false
 )

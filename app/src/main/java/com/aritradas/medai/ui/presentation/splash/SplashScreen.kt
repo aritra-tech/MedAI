@@ -21,10 +21,10 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.aritradas.medai.R
 import com.aritradas.medai.navigation.Screens
-import com.aritradas.medai.ui.presentation.login.GoogleAuthUiClient
 import com.aritradas.medai.utils.Constants.ANIMATION_DURATION
 import com.aritradas.medai.utils.Constants.SPLASH_DELAY
 import kotlinx.coroutines.delay
@@ -32,8 +32,8 @@ import kotlinx.coroutines.delay
 @Composable
 fun SplashScreen(
     navController: NavController,
-    googleAuthUiClient: GoogleAuthUiClient,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: SplashViewModel = hiltViewModel()
 ) {
 
     var startAnimation by remember { mutableStateOf(false) }
@@ -47,7 +47,7 @@ fun SplashScreen(
         startAnimation = true
         delay(SPLASH_DELAY)
         navController.popBackStack()
-        val route = if (googleAuthUiClient.getSignedInUser() != null) {
+        val route = if (viewModel.isUserSignedIn()) {
             Screens.Prescription.route
         } else {
             Screens.Login.route

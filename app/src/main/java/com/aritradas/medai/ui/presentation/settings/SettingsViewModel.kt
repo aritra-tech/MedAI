@@ -6,10 +6,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.aritradas.medai.MainActivity
 import com.aritradas.medai.data.datastore.DataStoreUtil
+import com.aritradas.medai.domain.repository.AuthRepository
 import com.aritradas.medai.domain.repository.BiometricAuthListener
 import com.aritradas.medai.utils.AppBioMetricManager
+import com.aritradas.medai.utils.Resource
 import com.aritradas.medai.utils.runIO
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -22,11 +23,10 @@ import javax.inject.Inject
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val appBioMetricManager: AppBioMetricManager,
+    private val authRepository: AuthRepository,
     dataStoreUtil: DataStoreUtil
 ): ViewModel() {
 
-    private val auth = FirebaseAuth.getInstance()
-    private val user = auth.currentUser
     private val userDB = FirebaseFirestore.getInstance()
 
     private val dataStore = dataStoreUtil.dataStore
@@ -68,14 +68,24 @@ class SettingsViewModel @Inject constructor(
             }
         )
     }
+
     fun logout() = runIO {
-        FirebaseAuth.getInstance().signOut()
-        onLogOutComplete.postValue(true)
+        when (authRepository.signOut()) {
+            is Resource.Success -> {
+                onLogOutComplete.postValue(true)
+            }
+
+            is Resource.Error -> {
+                onLogOutComplete.postValue(true)
+            }
+
+            is Resource.Loading -> {
+            }
+        }
     }
 
-
     fun deleteAccount() = runIO {
-        user?.let {
+        authRepository.getCurrentUser()?.let {
             userDB.collection("users").document(it.uid).delete()
         }
         onDeleteAccountComplete.postValue(true)
