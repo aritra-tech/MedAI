@@ -63,7 +63,7 @@ fun SplashScreen(
         contentAlignment = Alignment.Center
     ) {
         Image(
-            imageVector = ImageVector.vectorResource(R.drawable.ic_launcher_foreground),
+            imageVector = ImageVector.vectorResource(R.drawable.med_ai_logo_rounded),
             contentDescription = null,
             modifier = Modifier
                 .alpha(alphaAnimation.value)

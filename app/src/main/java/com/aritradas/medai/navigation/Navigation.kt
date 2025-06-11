@@ -14,6 +14,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.aritradas.medai.ui.presentation.login.LoginScreen
+import com.aritradas.medai.ui.presentation.onboarding.WelcomeScreen
 import com.aritradas.medai.ui.presentation.prescription.PrescriptionScreen
 import com.aritradas.medai.ui.presentation.prescriptionDetails.PrescriptionDetailsScreen
 import com.aritradas.medai.ui.presentation.prescriptionSummarize.PrescriptionSummarizeScreen
@@ -56,7 +57,9 @@ fun Navigation() {
             }
             
             composable(Screens.Onboarding.route) {
-                // Onboarding screen composable
+                WelcomeScreen(
+                    navController
+                )
             }
             
             composable(Screens.Login.route) {
