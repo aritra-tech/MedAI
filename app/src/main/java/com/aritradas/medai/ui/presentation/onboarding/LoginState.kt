@@ -1,4 +1,4 @@
-package com.aritradas.medai.ui.presentation.login
+package com.aritradas.medai.ui.presentation.onboarding
 
 data class LoginState(
     val isLoading: Boolean = false,

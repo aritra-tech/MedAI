@@ -1,8 +1,7 @@
-package com.aritradas.medai.ui.presentation.login
+package com.aritradas.medai.ui.presentation.onboarding
 
 import android.content.Intent
 import androidx.lifecycle.ViewModel
-import com.aritradas.medai.domain.model.SignInResult
 import com.aritradas.medai.domain.repository.AuthRepository
 import com.aritradas.medai.utils.Resource
 import com.aritradas.medai.utils.runIO

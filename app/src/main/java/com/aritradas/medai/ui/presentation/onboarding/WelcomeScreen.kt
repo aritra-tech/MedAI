@@ -1,13 +1,14 @@
-package com.aritradas.medai.ui.presentation.login
+package com.aritradas.medai.ui.presentation.onboarding
 
 import android.app.Activity
-import android.app.ProgressDialog
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,7 +23,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -36,16 +36,17 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.BlendMode.Companion.Screen
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.aritradas.medai.R
 import com.aritradas.medai.navigation.Screens
@@ -56,10 +57,11 @@ import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
-fun LoginScreen(
+fun WelcomeScreen(
     navController: NavController,
-    viewModel: LoginViewModel = hiltViewModel(),
+    viewModel: LoginViewModel = hiltViewModel()
 ) {
+
     val scope = rememberCoroutineScope()
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
@@ -96,9 +98,6 @@ fun LoginScreen(
         }
     }
 
-    LaunchedEffect(Unit) {
-        viewModel.logout()
-    }
 
     LaunchedEffect(uiState.error) {
         uiState.error?.let { errorMessage ->
@@ -113,7 +112,7 @@ fun LoginScreen(
     LaunchedEffect(uiState.isLoginSuccess) {
         if (uiState.isLoginSuccess) {
             navController.navigate(Screens.Prescription.route) {
-                popUpTo(Screens.Login.route) {
+                popUpTo(Screens.Onboarding.route) {
                     inclusive = true
                 }
             }
@@ -143,25 +142,47 @@ fun LoginScreen(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp, vertical = 20.dp)
-                .imePadding(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Top
+                .padding(horizontal = 24.dp, vertical = 32.dp)
+                .imePadding()
         ) {
-            Text(
-                text = "Log In",
-                style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 44.dp, bottom = 32.dp)
-            )
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
 
-            Spacer(Modifier.weight(1f))
+                Image(
+                    painter = painterResource(id = R.drawable.welcome_illustration),
+                    contentDescription = "Medical illustration",
+                    modifier = Modifier
+                        .size(280.dp)
+                        .padding(bottom = 32.dp),
+                    contentScale = ContentScale.Fit
+                )
 
+                Text(
+                    text = stringResource(R.string.welcome_to_medai),
+                    style = MaterialTheme.typography.displaySmall.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = MaterialTheme.colorScheme.onBackground,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                Text(
+                    text = stringResource(R.string.your_smart_medical_assistant),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+
+                Spacer(modifier = Modifier.height(48.dp))
+            }
 
             OutlinedButton(
                 onClick = {
@@ -169,12 +190,12 @@ fun LoginScreen(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp),
+                    .height(56.dp)
+                    .align(Alignment.BottomCenter),
                 shape = MaterialTheme.shapes.medium,
                 colors = ButtonDefaults.outlinedButtonColors(
                     contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                ),
-                enabled = !uiState.isLoading
+                )
             ) {
                 Icon(
                     imageVector = ImageVector.vectorResource(id = R.drawable.google_color_icon),
@@ -184,16 +205,10 @@ fun LoginScreen(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Sign in with Google",
+                    text = stringResource(R.string.sign_in_with_google),
                     style = MaterialTheme.typography.titleMedium
                 )
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            SnackbarHost(hostState = snackbarHostState, modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .padding(16.dp))
         }
     }
 }

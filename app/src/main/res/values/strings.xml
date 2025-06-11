@@ -20,4 +20,8 @@
     <string name="delete_account">Delete Account</string>
     <string name="are_you_sure_you_want_to_logout">Are you sure you want to logout?</string>
     <string name="logout">Logout</string>
+    <string name="welcome_to_medai">Welcome to MedAI</string>
+    <string name="your_smart_medical_assistant">Your smart medical assistant for prescription analysis and health management</string>
+    <string name="sign_in_with_google">Sign in with Google</string>
+    <string name="get_started">Get Started</string>
 </resources>

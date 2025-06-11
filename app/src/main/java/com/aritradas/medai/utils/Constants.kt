@@ -3,7 +3,6 @@ package com.aritradas.medai.utils
 object Constants {
     const val SPLASH_SCREEN = "splash_screen"
     const val ONBOARDING_SCREEN = "onboarding_screen"
-    const val LOGIN_SCREEN = "login_screen"
     const val PRESCRIPTION_SCREEN = "prescription_screen"
     const val PRESCRIPTION_DETAILS_SCREEN = "prescription_details_screen"
     const val PRESCRIPTION_SUMMARIZE_SCREEN = "prescription_summarize_screen"
