@@ -4,7 +4,6 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
@@ -50,7 +49,7 @@ fun SplashScreen(
         val route = if (viewModel.isUserSignedIn()) {
             Screens.Prescription.route
         } else {
-            Screens.Login.route
+            Screens.Onboarding.route
         }
         navController.navigate(route)
     }
@@ -68,9 +67,6 @@ fun SplashScreen(
             modifier = Modifier
                 .alpha(alphaAnimation.value)
                 .size(160.dp)
-                .clickable {
-                    navController.navigate(Screens.Login.route)
-                }
         )
     }
 }

@@ -6,14 +6,12 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavType.Companion.IntType
 import androidx.navigation.NavType.Companion.StringType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.aritradas.medai.ui.presentation.login.LoginScreen
 import com.aritradas.medai.ui.presentation.onboarding.WelcomeScreen
 import com.aritradas.medai.ui.presentation.prescription.PrescriptionScreen
 import com.aritradas.medai.ui.presentation.prescriptionDetails.PrescriptionDetailsScreen
@@ -59,12 +57,6 @@ fun Navigation() {
             composable(Screens.Onboarding.route) {
                 WelcomeScreen(
                     navController
-                )
-            }
-            
-            composable(Screens.Login.route) {
-                LoginScreen(
-                    navController = navController
                 )
             }
             
