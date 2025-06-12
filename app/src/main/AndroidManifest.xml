@@ -18,10 +18,10 @@
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
-        android:icon="@drawable/medai_logo"
+        android:icon="@mipmap/ic_launcher_monocrome_foreground"
         android:label="@string/app_name"
         android:name=".MedAI"
-        android:roundIcon="@drawable/med_ai_logo_rounded"
+        android:roundIcon="@mipmap/ic_launcher_monocrome_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MedAI"
         tools:targetApi="31">
