@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavType.Companion.StringType
+import androidx.navigation.NavType.Companion.BoolType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -80,10 +81,29 @@ fun Navigation() {
                     prescriptionId = id,
                 )
             }
-            
-            composable(Screens.PrescriptionSummarize.route) {
+
+            composable(
+                route = "${Screens.PrescriptionSummarize.route}?hasCameraPermission={hasCameraPermission}&hasStoragePermission={hasStoragePermission}",
+                arguments = listOf(
+                    navArgument("hasCameraPermission") {
+                        type = BoolType
+                        defaultValue = false
+                    },
+                    navArgument("hasStoragePermission") {
+                        type = BoolType
+                        defaultValue = false
+                    }
+                )
+            ) { backStackEntry ->
+                val hasCameraPermission =
+                    backStackEntry.arguments?.getBoolean("hasCameraPermission") ?: false
+                val hasStoragePermission =
+                    backStackEntry.arguments?.getBoolean("hasStoragePermission") ?: false
+
                 PrescriptionSummarizeScreen(
-                    navController = navController
+                    navController = navController,
+                    hasCameraPermission = hasCameraPermission,
+                    hasStoragePermission = hasStoragePermission
                 )
             }
             

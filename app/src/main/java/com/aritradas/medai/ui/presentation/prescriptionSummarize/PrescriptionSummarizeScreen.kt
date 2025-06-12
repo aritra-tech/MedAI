@@ -1,6 +1,8 @@
 package com.aritradas.medai.ui.presentation.prescriptionSummarize
 
+import android.content.Intent
 import android.net.Uri
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
@@ -75,6 +77,8 @@ import java.util.Locale
 @Composable
 fun PrescriptionSummarizeScreen(
     navController: NavController,
+    hasCameraPermission: Boolean = false,
+    hasStoragePermission: Boolean = false,
     prescriptionViewModel: PrescriptionSummarizeViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
@@ -82,6 +86,8 @@ fun PrescriptionSummarizeScreen(
     val uiState by prescriptionViewModel.uiState.collectAsState()
 
     var showDialog by remember { mutableStateOf(false) }
+    var showPermissionDialog by remember { mutableStateOf(false) }
+    var permissionType by remember { mutableStateOf("") }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     var cameraUri by remember { mutableStateOf<Uri?>(null) }
 
@@ -109,20 +115,32 @@ fun PrescriptionSummarizeScreen(
     )
 
     val handleTakePhoto = {
-        val photoFile = createImageFile()
-        val photoUri = FileProvider.getUriForFile(
-            context,
-            "${context.packageName}.fileprovider",
-            photoFile
-        )
-        cameraUri = photoUri
-        cameraLauncher.launch(photoUri)
-        showDialog = false
+        if (hasCameraPermission) {
+            val photoFile = createImageFile()
+            val photoUri = FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                photoFile
+            )
+            cameraUri = photoUri
+            cameraLauncher.launch(photoUri)
+            showDialog = false
+        } else {
+            permissionType = "camera"
+            showPermissionDialog = true
+            showDialog = false
+        }
     }
 
     val handleAddImage = {
-        galleryLauncher.launch("image/*")
-        showDialog = false
+        if (hasStoragePermission) {
+            galleryLauncher.launch("image/*")
+            showDialog = false
+        } else {
+            permissionType = "storage"
+            showPermissionDialog = true
+            showDialog = false
+        }
     }
 
     val handleRemoveImage = {
@@ -507,6 +525,49 @@ fun PrescriptionSummarizeScreen(
                 }
             },
             confirmButton = {}
+        )
+    }
+
+    // Permission dialog
+    if (showPermissionDialog) {
+        AlertDialog(
+            onDismissRequest = { showPermissionDialog = false },
+            title = {
+                Text("Permission Required")
+            },
+            text = {
+                Text("This app needs $permissionType permission to function properly.")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val intent = when (permissionType) {
+                            "camera" -> Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                data = Uri.fromParts("package", context.packageName, null)
+                            }
+
+                            "storage" -> Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                data = Uri.fromParts("package", context.packageName, null)
+                            }
+
+                            else -> Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                data = Uri.fromParts("package", context.packageName, null)
+                            }
+                        }
+                        context.startActivity(intent)
+                        showPermissionDialog = false
+                    }
+                ) {
+                    Text("Settings")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showPermissionDialog = false }
+                ) {
+                    Text("Cancel")
+                }
+            }
         )
     }
 }
