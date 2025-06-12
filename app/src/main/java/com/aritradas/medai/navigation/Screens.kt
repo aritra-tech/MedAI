@@ -3,7 +3,6 @@ package com.aritradas.medai.navigation
 import com.aritradas.medai.utils.Constants
 
 sealed class Screens(val route: String) {
-    data object Splash : Screens(Constants.SPLASH_SCREEN)
     data object Onboarding : Screens(Constants.ONBOARDING_SCREEN)
     data object Prescription: Screens(Constants.PRESCRIPTION_SCREEN)
     data object PrescriptionDetails: Screens(Constants.PRESCRIPTION_DETAILS_SCREEN)

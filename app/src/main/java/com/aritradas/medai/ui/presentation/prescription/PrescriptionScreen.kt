@@ -185,6 +185,8 @@ fun PrescriptionScreen(
     }
 
     LaunchedEffect(Unit) {
+        // Only load prescriptions if we're on this screen 
+        // (splash already verified user is authenticated)
         viewModel.loadPrescriptions()
     }
 

@@ -2,6 +2,7 @@ package com.aritradas.medai.ui.presentation.prescription
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.aritradas.medai.domain.repository.AuthRepository
 import com.aritradas.medai.domain.repository.PrescriptionRepository
 import com.aritradas.medai.ui.presentation.prescription.state.PrescriptionListUiState
 import com.aritradas.medai.utils.Resource
@@ -14,7 +15,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class PrescriptionViewModel @Inject constructor(
-    private val prescriptionRepository: PrescriptionRepository
+    private val prescriptionRepository: PrescriptionRepository,
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PrescriptionListUiState())
@@ -22,6 +24,18 @@ class PrescriptionViewModel @Inject constructor(
 
     fun loadPrescriptions() {
         viewModelScope.launch {
+            // Check if user is authenticated before trying to load prescriptions
+            if (authRepository.getCurrentUser() == null) {
+                // User is not authenticated, set empty state without error
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    prescriptions = emptyList(),
+                    filteredPrescriptions = emptyList(),
+                    error = null
+                )
+                return@launch
+            }
+
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
             when (val result = prescriptionRepository.getSavedPrescriptions()) {

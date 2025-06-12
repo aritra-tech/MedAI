@@ -2,4 +2,11 @@
 <resources>
 
     <style name="Theme.MedAI" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <style name="Theme.MedAI.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_monocrome_round</item>
+        <item name="windowSplashScreenAnimationDuration">1000</item>
+        <item name="postSplashScreenTheme">@style/Theme.MedAI</item>
+    </style>
 </resources>

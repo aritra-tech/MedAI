@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavType.Companion.StringType
@@ -20,15 +22,26 @@ import com.aritradas.medai.ui.presentation.prescriptionSummarize.PrescriptionSum
 import com.aritradas.medai.ui.presentation.profile.HelpScreen
 import com.aritradas.medai.ui.presentation.profile.ProfileScreen
 import com.aritradas.medai.ui.presentation.settings.SettingsScreen
-import com.aritradas.medai.ui.presentation.splash.SplashScreen
+import com.aritradas.medai.ui.presentation.splash.SplashViewModel
 
 @Composable
-fun Navigation() {
+fun Navigation(splashViewModel: SplashViewModel) {
 
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
-    
+
+    val navigationDestination by splashViewModel.navigationDestination.collectAsState()
+
+    // Handle navigation after splash
+    LaunchedEffect(navigationDestination) {
+        navigationDestination?.let { destination ->
+            navController.navigate(destination) {
+                popUpTo(Screens.Prescription.route) { inclusive = true }
+            }
+        }
+    }
+
     val bottomBarScreens = listOf(
         Screens.Prescription.route,
         Screens.Profile.route
@@ -46,15 +59,9 @@ fun Navigation() {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = Screens.Splash.route,
+            startDestination = Screens.Prescription.route,
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable(Screens.Splash.route) {
-                SplashScreen(
-                    navController = navController
-                )
-            }
-            
             composable(Screens.Onboarding.route) {
                 WelcomeScreen(
                     navController

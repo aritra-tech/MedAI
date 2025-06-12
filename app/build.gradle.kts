@@ -117,6 +117,9 @@ dependencies {
     // Biometric
     implementation(libs.androidx.biometric)
 
+    // Splash
+    implementation(libs.androidx.core.splashscreen)
+
     //Test
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
