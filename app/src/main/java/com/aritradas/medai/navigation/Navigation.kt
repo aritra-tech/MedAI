@@ -1,5 +1,6 @@
 package com.aritradas.medai.navigation
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -7,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavType.Companion.StringType
 import androidx.navigation.NavType.Companion.BoolType
@@ -33,11 +35,10 @@ fun Navigation(splashViewModel: SplashViewModel) {
 
     val navigationDestination by splashViewModel.navigationDestination.collectAsState()
 
-    // Handle navigation after splash
     LaunchedEffect(navigationDestination) {
         navigationDestination?.let { destination ->
             navController.navigate(destination) {
-                popUpTo(Screens.Prescription.route) { inclusive = true }
+                popUpTo("loading") { inclusive = true }
             }
         }
     }
@@ -46,7 +47,7 @@ fun Navigation(splashViewModel: SplashViewModel) {
         Screens.Prescription.route,
         Screens.Profile.route
     )
-    
+
     val showBottomBar = currentRoute in bottomBarScreens
 
     Scaffold(
@@ -59,9 +60,16 @@ fun Navigation(splashViewModel: SplashViewModel) {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = Screens.Prescription.route,
+            startDestination = "loading",
             modifier = Modifier.padding(innerPadding)
         ) {
+            composable("loading") {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {}
+            }
+
             composable(Screens.Onboarding.route) {
                 WelcomeScreen(
                     navController
