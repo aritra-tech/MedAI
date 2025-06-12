@@ -16,7 +16,6 @@ android {
     namespace = "com.aritradas.medai"
     compileSdk = 35
 
-    buildFeatures.buildConfig = true
     defaultConfig {
         applicationId = "com.aritradas.medai"
         minSdk = 24
@@ -25,7 +24,7 @@ android {
         versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        
+
         // Add BuildConfig field for Gemini API key
         buildConfigField("String", "GEMINI_API_KEY", "\"${project.findProperty("GEMINI_API_KEY") ?: ""}\"")
     }
@@ -50,6 +49,18 @@ android {
         compose = true
         buildConfig = true
     }
+}
+
+detekt {
+    buildUponDefaultConfig = true
+    allRules = false
+}
+
+tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
+    jvmTarget = "17"
+
+    // Don't fail build on issues, just generate reports
+    ignoreFailures = true
 }
 
 dependencies {
@@ -105,6 +116,9 @@ dependencies {
 
     // Biometric
     implementation(libs.androidx.biometric)
+
+    // Splash
+    implementation(libs.androidx.core.splashscreen)
 
     //Test
     testImplementation(libs.junit)

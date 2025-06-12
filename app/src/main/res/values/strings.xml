@@ -1,4 +1,27 @@
 <resources>
     <string name="app_name">MedAI</string>
+    <string name="loading">Loading...</string>
+    <string name="google_sign_in_failed_no_id_token">Google Sign-In failed: No ID Token</string>
+    <string name="google_sign_in_cancelled">Google Sign-In cancelled</string>
+    <string name="login_successful">Login Successful!</string>
+    <string name="dismiss">Dismiss</string>
+    <string name="press_back_again_to_exit">Press back again to exit</string>
     <string name="web_client_id">470799090291-jflqekjjpn0il36i129moqht6dmif5d9.apps.googleusercontent.com</string>
+    <string name="send_feedback">Send Feedback</string>
+    <string name="terms_conditions"><![CDATA[Terms & Conditions]]></string>
+    <string name="privacy_policy">Privacy Policy</string>
+    <string name="take_a_photo_of_your_prescription_or_upload_an_existing_image">Take a photo of your prescription or upload an existing image.</string>
+    <string name="mailTo">mailto:medai.summarizer@gmail.com?Subject=Your%20feedback%20is%20important%20to%20us%21</string>
+    <string name="upload_a_prescription">Upload a prescription</string>
+    <string name="security">Security</string>
+    <string name="biometric_unlock">Biometric unlock</string>
+    <string name="use_biometric_to_unlock_the_app">Use biometric to unlock the app</string>
+    <string name="are_you_sure_you_want_to_delete_your_account_this_action_is_irreversible">Are you sure you want to delete your account? This action is irreversible.</string>
+    <string name="delete_account">Delete Account</string>
+    <string name="are_you_sure_you_want_to_logout">Are you sure you want to logout?</string>
+    <string name="logout">Logout</string>
+    <string name="welcome_to_medai">Welcome to MedAI</string>
+    <string name="your_smart_medical_assistant">Your smart medical assistant for prescription analysis and health management</string>
+    <string name="sign_in_with_google">Sign in with Google</string>
+    <string name="get_started">Get Started</string>
 </resources>

@@ -1,0 +1,64 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - '**'
+
+  pull_request:
+    branches:
+      - '**'
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      -   name: Checkout the code
+          uses: actions/checkout@v4
+
+      -   name: Set up JDK 17
+          uses: actions/setup-java@v3
+          with:
+            distribution: 'temurin'
+            java-version: '17'
+
+      -   name: Grant execute permission for gradlew
+          run: chmod +x gradlew
+
+      - name: Create local.properties
+        run: echo "sdk.dir=$ANDROID_HOME" > local.properties
+
+      -   name: Build with Gradle
+          run: ./gradlew build
+
+      -   name: Cache Gradle dependencies
+          uses: actions/cache@v3
+          with:
+            path: |
+              ~/.gradle/caches
+              ~/.gradle/wrapper
+            key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+            restore-keys: |
+              gradle-${{ runner.os }}-
+
+      -   name: Run Android Lint
+          run: ./gradlew lint
+
+      -   name: Run Detekt
+          run: ./gradlew detekt
+
+      -   name: Upload Lint Results
+          uses: actions/upload-artifact@v4
+          if: always()
+          with:
+            name: lint-results
+            path: '**/build/reports/lint-results*.html'
+
+      -   name: Upload Detekt Results
+          uses: actions/upload-artifact@v4
+          if: always()
+          with:
+            name: detekt-results
+            path: '**/build/reports/detekt/detekt.html'
