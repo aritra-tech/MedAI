@@ -126,11 +126,14 @@ fun PrescriptionScreen(
             )
         }
     }
-    
+
+    var permissionRequestInProgress by remember { mutableStateOf(false) }
+
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = { isGranted ->
             hasNotificationPermission = isGranted
+            permissionRequestInProgress = false
         }
     )
     
@@ -138,6 +141,7 @@ fun PrescriptionScreen(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = { isGranted ->
             hasCameraPermission = isGranted
+            permissionRequestInProgress = false
         }
     )
     
@@ -145,25 +149,38 @@ fun PrescriptionScreen(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = { isGranted ->
             hasStoragePermission = isGranted
+            permissionRequestInProgress = false
         }
     )
 
-    LaunchedEffect(Unit) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-        }
-        
-        if (!hasCameraPermission) {
-            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-        }
-        
-        if (!hasStoragePermission) {
-            val storagePermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                Manifest.permission.READ_MEDIA_IMAGES
-            } else {
-                Manifest.permission.READ_EXTERNAL_STORAGE
+    LaunchedEffect(
+        hasNotificationPermission,
+        hasCameraPermission,
+        hasStoragePermission,
+        permissionRequestInProgress
+    ) {
+        if (permissionRequestInProgress) return@LaunchedEffect
+
+        // Request permissions one by one in order of priority
+        when {
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !hasNotificationPermission -> {
+                permissionRequestInProgress = true
+                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
-            storagePermissionLauncher.launch(storagePermission)
+            !hasCameraPermission -> {
+                permissionRequestInProgress = true
+                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+            }
+
+            !hasStoragePermission -> {
+                permissionRequestInProgress = true
+                val storagePermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    Manifest.permission.READ_MEDIA_IMAGES
+                } else {
+                    Manifest.permission.READ_EXTERNAL_STORAGE
+                }
+                storagePermissionLauncher.launch(storagePermission)
+            }
         }
     }
 
