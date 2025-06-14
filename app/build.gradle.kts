@@ -120,6 +120,10 @@ dependencies {
     // Splash
     implementation(libs.androidx.core.splashscreen)
 
+    // In-App Update
+    implementation(libs.app.update)
+    implementation(libs.app.update.ktx)
+
     //Test
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
