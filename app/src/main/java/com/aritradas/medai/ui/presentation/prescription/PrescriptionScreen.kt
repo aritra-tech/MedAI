@@ -33,7 +33,6 @@ import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButton
@@ -42,8 +41,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SearchBar
+import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.toShape
@@ -185,8 +185,6 @@ fun PrescriptionScreen(
     }
 
     LaunchedEffect(Unit) {
-        // Only load prescriptions if we're on this screen 
-        // (splash already verified user is authenticated)
         viewModel.loadPrescriptions()
     }
 
@@ -207,9 +205,15 @@ fun PrescriptionScreen(
 
     Scaffold(
         topBar = {
-            OutlinedTextField(
-                value = uiState.searchQuery,
-                onValueChange = viewModel::searchPrescriptions,
+            SearchBar(
+                query = uiState.searchQuery,
+                onQueryChange = viewModel::searchPrescriptions,
+                onSearch = { },
+                active = false,
+                onActiveChange = { },
+                content = {
+                    Text("Search prescriptions...")
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
@@ -233,7 +237,7 @@ fun PrescriptionScreen(
                     }
                 },
                 shape = RoundedCornerShape(12.dp),
-                singleLine = true
+                tonalElevation = SearchBarDefaults.Elevation
             )
         },
         floatingActionButton = {
