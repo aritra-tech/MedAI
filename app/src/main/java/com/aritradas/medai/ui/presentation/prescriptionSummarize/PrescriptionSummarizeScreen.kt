@@ -31,10 +31,12 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -68,12 +70,13 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.aritradas.medai.R
 import com.aritradas.medai.domain.model.Medication
+import com.aritradas.medai.ui.presentation.prescriptionSummarize.component.AnimatedLoadingDots
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun PrescriptionSummarizeScreen(
     navController: NavController,
@@ -331,26 +334,36 @@ fun PrescriptionSummarizeScreen(
             ) {
                 when {
                     uiState.isValidating -> {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            color = MaterialTheme.colorScheme.onPrimary
+                        LoadingIndicator(
+                            modifier = Modifier.size(20.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Validating...",
-                            color = Color.White
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "Verifying",
+                                color = Color.White
+                            )
+                            AnimatedLoadingDots(
+                                modifier = Modifier.padding(start = 4.dp),
+                                dotColor = Color.White
+                            )
+                        }
                     }
                     uiState.isLoading -> {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            color = MaterialTheme.colorScheme.onPrimary
+                        LoadingIndicator(
+                            modifier = Modifier.size(20.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Analyzing...",
-                            color = Color.White
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "Analyzing",
+                                color = Color.White
+                            )
+                            AnimatedLoadingDots(
+                                modifier = Modifier.padding(start = 4.dp),
+                                dotColor = Color.White
+                            )
+                        }
                     }
                     else -> {
                         Text("Summarize")
