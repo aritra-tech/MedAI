@@ -185,9 +185,7 @@ fun WelcomeScreen(
             }
 
             OutlinedButton(
-                onClick = {
-                    googleSignInLauncher.launch(viewModel.getGoogleSignInIntent())
-                },
+                onClick = { navController.navigate(Screens.Prescription.route)},
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp)
@@ -197,18 +195,37 @@ fun WelcomeScreen(
                     contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             ) {
-                Icon(
-                    imageVector = ImageVector.vectorResource(id = R.drawable.google_color_icon),
-                    contentDescription = "Google Logo",
-                    modifier = Modifier.size(24.dp),
-                    tint = Color.Unspecified
-                )
-                Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = stringResource(R.string.sign_in_with_google),
+                    text = "Get Started",
                     style = MaterialTheme.typography.titleMedium
                 )
             }
+
+//            OutlinedButton(
+//                onClick = {
+//                    googleSignInLauncher.launch(viewModel.getGoogleSignInIntent())
+//                },
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .height(56.dp)
+//                    .align(Alignment.BottomCenter),
+//                shape = MaterialTheme.shapes.medium,
+//                colors = ButtonDefaults.outlinedButtonColors(
+//                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+//                )
+//            ) {
+//                Icon(
+//                    imageVector = ImageVector.vectorResource(id = R.drawable.google_color_icon),
+//                    contentDescription = "Google Logo",
+//                    modifier = Modifier.size(24.dp),
+//                    tint = Color.Unspecified
+//                )
+//                Spacer(modifier = Modifier.width(8.dp))
+//                Text(
+//                    text = stringResource(R.string.sign_in_with_google),
+//                    style = MaterialTheme.typography.titleMedium
+//                )
+//            }
         }
     }
 }

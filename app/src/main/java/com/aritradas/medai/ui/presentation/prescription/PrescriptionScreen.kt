@@ -108,24 +108,6 @@ fun PrescriptionScreen(
             ) == PackageManager.PERMISSION_GRANTED
         )
     }
-    
-    var hasStoragePermission by remember {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            mutableStateOf(
-                ContextCompat.checkSelfPermission(
-                    context,
-                    Manifest.permission.READ_MEDIA_IMAGES
-                ) == PackageManager.PERMISSION_GRANTED
-            )
-        } else {
-            mutableStateOf(
-                ContextCompat.checkSelfPermission(
-                    context,
-                    Manifest.permission.READ_EXTERNAL_STORAGE
-                ) == PackageManager.PERMISSION_GRANTED
-            )
-        }
-    }
 
     var permissionRequestInProgress by remember { mutableStateOf(false) }
 
@@ -144,19 +126,10 @@ fun PrescriptionScreen(
             permissionRequestInProgress = false
         }
     )
-    
-    val storagePermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission(),
-        onResult = { isGranted ->
-            hasStoragePermission = isGranted
-            permissionRequestInProgress = false
-        }
-    )
 
     LaunchedEffect(
         hasNotificationPermission,
         hasCameraPermission,
-        hasStoragePermission,
         permissionRequestInProgress
     ) {
         if (permissionRequestInProgress) return@LaunchedEffect
@@ -170,16 +143,6 @@ fun PrescriptionScreen(
             !hasCameraPermission -> {
                 permissionRequestInProgress = true
                 cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-            }
-
-            !hasStoragePermission -> {
-                permissionRequestInProgress = true
-                val storagePermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    Manifest.permission.READ_MEDIA_IMAGES
-                } else {
-                    Manifest.permission.READ_EXTERNAL_STORAGE
-                }
-                storagePermissionLauncher.launch(storagePermission)
             }
         }
     }
@@ -240,7 +203,7 @@ fun PrescriptionScreen(
             FloatingActionButton(
                 onClick = { 
                     navController.navigate(
-                        "${Screens.PrescriptionSummarize.route}?hasCameraPermission=$hasCameraPermission&hasStoragePermission=$hasStoragePermission"
+                        "${Screens.PrescriptionSummarize.route}?hasCameraPermission=$hasCameraPermission"
                     )
                 }
             ) {

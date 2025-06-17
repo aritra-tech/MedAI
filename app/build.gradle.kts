@@ -20,8 +20,8 @@ android {
         applicationId = "com.aritradas.medai"
         minSdk = 24
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 4
+        versionName = "0.0.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
