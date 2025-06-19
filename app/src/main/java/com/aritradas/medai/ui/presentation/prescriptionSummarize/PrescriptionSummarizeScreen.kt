@@ -3,9 +3,11 @@ package com.aritradas.medai.ui.presentation.prescriptionSummarize
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,10 +27,13 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -38,6 +43,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -64,13 +71,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.aritradas.medai.R
 import com.aritradas.medai.domain.model.Medication
-import com.aritradas.medai.ui.presentation.prescriptionSummarize.component.AnimatedLoadingDots
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -87,6 +94,9 @@ fun PrescriptionSummarizeScreen(
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     val uiState by prescriptionViewModel.uiState.collectAsState()
 
+    var showReportDialog by remember { mutableStateOf(false) }
+    var showReportTypeDialog by remember { mutableStateOf(false) }
+    var reportReason by remember { mutableStateOf("") }
     var showDialog by remember { mutableStateOf(false) }
     var showPermissionDialog by remember { mutableStateOf(false) }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
@@ -155,6 +165,16 @@ fun PrescriptionSummarizeScreen(
     }
     prescriptionViewModel.setOnSaveSuccessCallback {
         navController.popBackStack()
+    }
+
+    val handleReport = { showReportTypeDialog = true }
+    val handleReportSubmit = {
+        if (reportReason.isNotBlank()) {
+            showReportDialog = false
+            showReportTypeDialog = false
+            Toast.makeText(context, "Report has been submitted", Toast.LENGTH_SHORT).show()
+            reportReason = ""
+        }
     }
 
     Scaffold(
@@ -338,10 +358,6 @@ fun PrescriptionSummarizeScreen(
                                 text = "Verifying",
                                 color = Color.White
                             )
-                            AnimatedLoadingDots(
-                                modifier = Modifier.padding(start = 4.dp),
-                                dotColor = Color.White
-                            )
                         }
                     }
 
@@ -354,10 +370,6 @@ fun PrescriptionSummarizeScreen(
                             Text(
                                 text = "Analyzing",
                                 color = Color.White
-                            )
-                            AnimatedLoadingDots(
-                                modifier = Modifier.padding(start = 4.dp),
-                                dotColor = Color.White
                             )
                         }
                     }
@@ -373,9 +385,9 @@ fun PrescriptionSummarizeScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 // Summary Card
-                androidx.compose.material3.Card(
+                Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = androidx.compose.material3.CardDefaults.cardColors(
+                    colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant
                     )
                 ) {
@@ -417,8 +429,8 @@ fun PrescriptionSummarizeScreen(
 
                         if (summary.dosageInstructions.isNotEmpty()) {
                             Spacer(modifier = Modifier.height(16.dp))
-                            androidx.compose.material3.Card(
-                                colors = androidx.compose.material3.CardDefaults.cardColors(
+                            Card(
+                                colors = CardDefaults.cardColors(
                                     containerColor = MaterialTheme.colorScheme.errorContainer
                                 )
                             ) {
@@ -440,6 +452,41 @@ fun PrescriptionSummarizeScreen(
                                     }
                                 }
                             }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "⚠️ AI-generated content - verify with doctor",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.weight(1f)
+                        )
+
+                        IconButton(
+                            onClick = handleReport,
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Flag,
+                                contentDescription = "Report content",
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.size(16.dp)
+                            )
                         }
                     }
                 }
@@ -570,15 +617,140 @@ fun PrescriptionSummarizeScreen(
             }
         )
     }
+
+    if (showReportTypeDialog) {
+        Dialog(
+            onDismissRequest = { showReportTypeDialog = false }
+        ) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.Start
+                ) {
+                    Text(
+                        text = "Select Report Type",
+                        style = MaterialTheme.typography.headlineSmall,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                reportReason = "Medical Inaccuracy"
+                                showReportTypeDialog = false
+                            },
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = false,
+                            onClick = {
+                                reportReason = "Medical Inaccuracy"
+                                showReportTypeDialog = false
+                            }
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Medical Inaccuracy")
+                    }
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                reportReason = "Misinformation"
+                                showReportTypeDialog = false
+                            },
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = false,
+                            onClick = {
+                                reportReason = "Misinformation"
+                                showReportTypeDialog = false
+                            }
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Misinformation")
+                    }
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                reportReason = ""
+                                showReportDialog = true
+                                showReportTypeDialog = false
+                            },
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = false,
+                            onClick = {
+                                reportReason = ""
+                                showReportDialog = true
+                                showReportTypeDialog = false
+                            }
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Other")
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        TextButton(onClick = { showReportTypeDialog = false }) {
+                            Text("Cancel")
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (showReportDialog) {
+        AlertDialog(
+            onDismissRequest = { showReportDialog = false },
+            title = { Text("Report Content") },
+            text = {
+                Column {
+                    Text("Is this content problematic or incorrect? Please explain below.")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = reportReason,
+                        onValueChange = { reportReason = it },
+                        label = { Text("Report Reason") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = handleReportSubmit) {
+                    Text("Report")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showReportDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 }
 
 @Composable
 private fun MedicationCard(medication: Medication) {
-    androidx.compose.material3.Card(
-        colors = androidx.compose.material3.CardDefaults.cardColors(
+    Card(
+        colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = androidx.compose.material3.CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
             modifier = Modifier
