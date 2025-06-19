@@ -81,7 +81,6 @@ import java.util.Locale
 fun PrescriptionSummarizeScreen(
     navController: NavController,
     hasCameraPermission: Boolean = false,
-    hasStoragePermission: Boolean = false,
     prescriptionViewModel: PrescriptionSummarizeViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
@@ -90,7 +89,6 @@ fun PrescriptionSummarizeScreen(
 
     var showDialog by remember { mutableStateOf(false) }
     var showPermissionDialog by remember { mutableStateOf(false) }
-    var permissionType by remember { mutableStateOf("") }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     var cameraUri by remember { mutableStateOf<Uri?>(null) }
 
@@ -111,7 +109,7 @@ fun PrescriptionSummarizeScreen(
     )
 
     val galleryLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent(),
+        contract = ActivityResultContracts.PickVisualMedia(),
         onResult = { uri ->
             imageUri = uri
         }
@@ -129,21 +127,18 @@ fun PrescriptionSummarizeScreen(
             cameraLauncher.launch(photoUri)
             showDialog = false
         } else {
-            permissionType = "camera"
             showPermissionDialog = true
             showDialog = false
         }
     }
 
     val handleAddImage = {
-        if (hasStoragePermission) {
-            galleryLauncher.launch("image/*")
-            showDialog = false
-        } else {
-            permissionType = "storage"
-            showPermissionDialog = true
-            showDialog = false
-        }
+        galleryLauncher.launch(
+            androidx.activity.result.PickVisualMediaRequest(
+                ActivityResultContracts.PickVisualMedia.ImageOnly
+            )
+        )
+        showDialog = false
     }
 
     val handleRemoveImage = {
@@ -349,6 +344,7 @@ fun PrescriptionSummarizeScreen(
                             )
                         }
                     }
+
                     uiState.isLoading -> {
                         LoadingIndicator(
                             modifier = Modifier.size(20.dp)
@@ -365,6 +361,7 @@ fun PrescriptionSummarizeScreen(
                             )
                         }
                     }
+
                     else -> {
                         Text("Summarize")
                     }
@@ -549,23 +546,13 @@ fun PrescriptionSummarizeScreen(
                 Text("Permission Required")
             },
             text = {
-                Text("This app needs $permissionType permission to function properly.")
+                Text("This app needs camera permission to take photos.")
             },
             confirmButton = {
                 TextButton(
                     onClick = {
-                        val intent = when (permissionType) {
-                            "camera" -> Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                                data = Uri.fromParts("package", context.packageName, null)
-                            }
-
-                            "storage" -> Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                                data = Uri.fromParts("package", context.packageName, null)
-                            }
-
-                            else -> Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                                data = Uri.fromParts("package", context.packageName, null)
-                            }
+                        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                            data = Uri.fromParts("package", context.packageName, null)
                         }
                         context.startActivity(intent)
                         showPermissionDialog = false
