@@ -54,7 +54,7 @@ class PrescriptionSummarizeViewModel @Inject constructor(
                     // Continue with AI validation
                 }
             }
-            
+
             // Then validate with AI
             _uiState.value = _uiState.value.copy(
                 isValidating = true,
@@ -166,7 +166,8 @@ class PrescriptionSummarizeViewModel @Inject constructor(
             val savedPrescription = SavedPrescription(
                 summary = currentSummary,
                 title = title,
-                savedAt = Date()
+                savedAt = Date(),
+                report = _uiState.value.report
             )
 
             when (val result = prescriptionRepository.savePrescription(savedPrescription)) {
@@ -200,5 +201,54 @@ class PrescriptionSummarizeViewModel @Inject constructor(
             saveSuccess = false,
             saveError = null
         )
+    }
+
+    fun updateReport(report: String) {
+        _uiState.value = _uiState.value.copy(report = report)
+    }
+
+    fun clearReport() {
+        _uiState.value = _uiState.value.copy(report = "")
+    }
+
+    fun submitReport() {
+        val currentSummary = _uiState.value.summary ?: return
+        val currentReport = _uiState.value.report
+
+        if (currentReport.isBlank()) return
+
+        viewModelScope.launch {
+            // Create a temporary prescription with just the report to save it
+            val title =
+                if (currentSummary.doctorName.isNotBlank() && currentSummary.doctorName != "Unknown Doctor") {
+                    "${currentSummary.doctorName}'s prescription - Report"
+                } else {
+                    val dateFormat =
+                        SimpleDateFormat("MMM dd, yyyy 'at' hh:mm a", Locale.getDefault())
+                    "Prescription Report - ${dateFormat.format(Date())}"
+                }
+
+            val prescriptionWithReport = SavedPrescription(
+                summary = currentSummary,
+                title = title,
+                savedAt = Date(),
+                report = currentReport
+            )
+
+            when (prescriptionRepository.savePrescription(prescriptionWithReport)) {
+                is Resource.Success -> {
+                    // Report saved successfully
+                    clearReport()
+                }
+
+                is Resource.Error -> {
+                    // Handle error if needed
+                }
+
+                is Resource.Loading -> {
+                    // Handle loading if needed
+                }
+            }
+        }
     }
 }
