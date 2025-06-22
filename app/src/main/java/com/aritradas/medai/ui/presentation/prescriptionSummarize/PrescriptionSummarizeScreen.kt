@@ -170,10 +170,24 @@ fun PrescriptionSummarizeScreen(
     val handleReport = { showReportTypeDialog = true }
     val handleReportSubmit = {
         if (reportReason.isNotBlank()) {
+            prescriptionViewModel.updateReport(reportReason)
+            prescriptionViewModel.submitReport()
             showReportDialog = false
             showReportTypeDialog = false
             Toast.makeText(context, "Report has been submitted", Toast.LENGTH_SHORT).show()
             reportReason = ""
+        }
+    }
+
+    val handleReportTypeSelection = { reason: String ->
+        if (reason == "Other") {
+            showReportTypeDialog = false
+            showReportDialog = true
+        } else {
+            prescriptionViewModel.updateReport(reason)
+            prescriptionViewModel.submitReport()
+            showReportTypeDialog = false
+            Toast.makeText(context, "Report has been submitted", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -641,16 +655,14 @@ fun PrescriptionSummarizeScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                reportReason = "Medical Inaccuracy"
-                                showReportTypeDialog = false
+                                handleReportTypeSelection("Medical Inaccuracy")
                             },
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         RadioButton(
                             selected = false,
                             onClick = {
-                                reportReason = "Medical Inaccuracy"
-                                showReportTypeDialog = false
+                                handleReportTypeSelection("Medical Inaccuracy")
                             }
                         )
                         Spacer(modifier = Modifier.width(8.dp))
@@ -661,16 +673,14 @@ fun PrescriptionSummarizeScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                reportReason = "Misinformation"
-                                showReportTypeDialog = false
+                                handleReportTypeSelection("Misinformation")
                             },
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         RadioButton(
                             selected = false,
                             onClick = {
-                                reportReason = "Misinformation"
-                                showReportTypeDialog = false
+                                handleReportTypeSelection("Misinformation")
                             }
                         )
                         Spacer(modifier = Modifier.width(8.dp))
@@ -681,18 +691,14 @@ fun PrescriptionSummarizeScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                reportReason = ""
-                                showReportDialog = true
-                                showReportTypeDialog = false
+                                handleReportTypeSelection("Other")
                             },
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         RadioButton(
                             selected = false,
                             onClick = {
-                                reportReason = ""
-                                showReportDialog = true
-                                showReportTypeDialog = false
+                                handleReportTypeSelection("Other")
                             }
                         )
                         Spacer(modifier = Modifier.width(8.dp))

@@ -11,5 +11,6 @@ data class PrescriptionUiState(
     val error: String? = null,
     val isSaving: Boolean = false,
     val saveSuccess: Boolean = false,
-    val saveError: String? = null
+    val saveError: String? = null,
+    val report: String = ""
 )
