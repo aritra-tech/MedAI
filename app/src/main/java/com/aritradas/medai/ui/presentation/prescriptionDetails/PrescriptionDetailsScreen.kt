@@ -1,5 +1,7 @@
 package com.aritradas.medai.ui.presentation.prescriptionDetails
 
+import android.widget.Toast
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,21 +15,25 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.Medication
+import androidx.compose.material.icons.outlined.Summarize
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -36,17 +42,21 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.aritradas.medai.domain.model.Medication
 import java.text.SimpleDateFormat
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun PrescriptionDetailsScreen(
     navController: NavController,
@@ -54,7 +64,20 @@ fun PrescriptionDetailsScreen(
     modifier: Modifier = Modifier,
     viewModel: PrescriptionDetailsViewModel = hiltViewModel()
 ) {
+    val context = navController.context
     val uiState by viewModel.uiState.collectAsState()
+    var showReportDialog by remember { mutableStateOf(false) }
+    var showReportTypeDialog by remember { mutableStateOf(false) }
+    var reportReason by remember { mutableStateOf("") }
+    val handleReport = { showReportTypeDialog = true }
+    val handleReportSubmit = {
+        if (reportReason.isNotBlank()) {
+            showReportDialog = false
+            showReportTypeDialog = false
+            Toast.makeText(context, "Report has been submitted", Toast.LENGTH_SHORT).show()
+            reportReason = ""
+        }
+    }
 
     LaunchedEffect(prescriptionId) {
         viewModel.loadPrescription(prescriptionId)
@@ -86,7 +109,7 @@ fun PrescriptionDetailsScreen(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        CircularProgressIndicator()
+                        LoadingIndicator()
                     }
                 }
 
@@ -130,6 +153,43 @@ fun PrescriptionDetailsScreen(
                                 WarningsCard(warnings = uiState.prescription!!.summary.warnings)
                             }
                         }
+
+                        item {
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            Card(
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                                )
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(8.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "⚠️ AI-generated content - verify with doctor",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        modifier = Modifier.weight(1f)
+                                    )
+
+                                    IconButton(
+                                        onClick = handleReport,
+                                        modifier = Modifier.size(24.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Flag,
+                                            contentDescription = "Report content",
+                                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -145,6 +205,135 @@ fun PrescriptionDetailsScreen(
             confirmButton = {
                 TextButton(onClick = { viewModel.clearError() }) {
                     Text("OK")
+                }
+            }
+        )
+    }
+
+    if (showReportTypeDialog) {
+        Dialog(
+            onDismissRequest = { showReportTypeDialog = false }
+        ) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.Start
+                ) {
+                    Text(
+                        text = "Select Report Type",
+                        style = MaterialTheme.typography.headlineSmall,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                reportReason = "Medical Inaccuracy"
+                                showReportDialog = true
+                                showReportTypeDialog = false
+                            },
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = false,
+                            onClick = {
+                                reportReason = "Medical Inaccuracy"
+                                showReportDialog = true
+                                showReportTypeDialog = false
+                            }
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Medical Inaccuracy")
+                    }
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                reportReason = "Misinformation"
+                                showReportDialog = true
+                                showReportTypeDialog = false
+                            },
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = false,
+                            onClick = {
+                                reportReason = "Misinformation"
+                                showReportDialog = true
+                                showReportTypeDialog = false
+                            }
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Misinformation")
+                    }
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                reportReason = ""
+                                showReportDialog = true
+                                showReportTypeDialog = false
+                            },
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = false,
+                            onClick = {
+                                reportReason = ""
+                                showReportDialog = true
+                                showReportTypeDialog = false
+                            }
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Other")
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        TextButton(onClick = { showReportTypeDialog = false }) {
+                            Text("Cancel")
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (showReportDialog) {
+        AlertDialog(
+            onDismissRequest = { showReportDialog = false },
+            title = { Text("Report Content") },
+            text = {
+                Column {
+                    Text("Is this content problematic or incorrect? Please explain below.")
+                    Spacer(modifier = Modifier.height(16.dp))
+                    OutlinedTextField(
+                        value = reportReason,
+                        onValueChange = { reportReason = it },
+                        label = { Text("Report Reason") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = handleReportSubmit) {
+                    Text("Report")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showReportDialog = false }) {
+                    Text("Cancel")
                 }
             }
         )
@@ -190,24 +379,6 @@ private fun PrescriptionHeaderCard(
                     fontWeight = FontWeight.Medium
                 )
             }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.AccessTime,
-                    contentDescription = "Date",
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = savedAt,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
         }
     }
 }
@@ -226,11 +397,20 @@ private fun SummaryCard(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            Text(
-                text = "Summary",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
-            )
+            Row {
+                Icon(
+                    imageVector = Icons.Outlined.Summarize,
+                    contentDescription = "Summary",
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Text(
+                    text = "Summary",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = summary,

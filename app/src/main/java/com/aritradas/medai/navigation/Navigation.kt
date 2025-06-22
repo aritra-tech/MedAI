@@ -98,13 +98,9 @@ fun Navigation(splashViewModel: SplashViewModel) {
             }
 
             composable(
-                route = "${Screens.PrescriptionSummarize.route}?hasCameraPermission={hasCameraPermission}&hasStoragePermission={hasStoragePermission}",
+                route = "${Screens.PrescriptionSummarize.route}?hasCameraPermission={hasCameraPermission}",
                 arguments = listOf(
                     navArgument("hasCameraPermission") {
-                        type = BoolType
-                        defaultValue = false
-                    },
-                    navArgument("hasStoragePermission") {
                         type = BoolType
                         defaultValue = false
                     }
@@ -112,13 +108,10 @@ fun Navigation(splashViewModel: SplashViewModel) {
             ) { backStackEntry ->
                 val hasCameraPermission =
                     backStackEntry.arguments?.getBoolean("hasCameraPermission") ?: false
-                val hasStoragePermission =
-                    backStackEntry.arguments?.getBoolean("hasStoragePermission") ?: false
 
                 PrescriptionSummarizeScreen(
                     navController = navController,
-                    hasCameraPermission = hasCameraPermission,
-                    hasStoragePermission = hasStoragePermission
+                    hasCameraPermission = hasCameraPermission
                 )
             }
             

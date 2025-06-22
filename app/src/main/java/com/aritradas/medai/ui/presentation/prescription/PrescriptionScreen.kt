@@ -33,7 +33,6 @@ import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButton
@@ -42,8 +41,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SearchBar
+import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.toShape
@@ -108,24 +108,6 @@ fun PrescriptionScreen(
             ) == PackageManager.PERMISSION_GRANTED
         )
     }
-    
-    var hasStoragePermission by remember {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            mutableStateOf(
-                ContextCompat.checkSelfPermission(
-                    context,
-                    Manifest.permission.READ_MEDIA_IMAGES
-                ) == PackageManager.PERMISSION_GRANTED
-            )
-        } else {
-            mutableStateOf(
-                ContextCompat.checkSelfPermission(
-                    context,
-                    Manifest.permission.READ_EXTERNAL_STORAGE
-                ) == PackageManager.PERMISSION_GRANTED
-            )
-        }
-    }
 
     var permissionRequestInProgress by remember { mutableStateOf(false) }
 
@@ -144,19 +126,10 @@ fun PrescriptionScreen(
             permissionRequestInProgress = false
         }
     )
-    
-    val storagePermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission(),
-        onResult = { isGranted ->
-            hasStoragePermission = isGranted
-            permissionRequestInProgress = false
-        }
-    )
 
     LaunchedEffect(
         hasNotificationPermission,
         hasCameraPermission,
-        hasStoragePermission,
         permissionRequestInProgress
     ) {
         if (permissionRequestInProgress) return@LaunchedEffect
@@ -171,22 +144,10 @@ fun PrescriptionScreen(
                 permissionRequestInProgress = true
                 cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
             }
-
-            !hasStoragePermission -> {
-                permissionRequestInProgress = true
-                val storagePermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    Manifest.permission.READ_MEDIA_IMAGES
-                } else {
-                    Manifest.permission.READ_EXTERNAL_STORAGE
-                }
-                storagePermissionLauncher.launch(storagePermission)
-            }
         }
     }
 
     LaunchedEffect(Unit) {
-        // Only load prescriptions if we're on this screen 
-        // (splash already verified user is authenticated)
         viewModel.loadPrescriptions()
     }
 
@@ -207,9 +168,15 @@ fun PrescriptionScreen(
 
     Scaffold(
         topBar = {
-            OutlinedTextField(
-                value = uiState.searchQuery,
-                onValueChange = viewModel::searchPrescriptions,
+            SearchBar(
+                query = uiState.searchQuery,
+                onQueryChange = viewModel::searchPrescriptions,
+                onSearch = { },
+                active = false,
+                onActiveChange = { },
+                content = {
+                    Text("Search prescriptions...")
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
@@ -233,14 +200,14 @@ fun PrescriptionScreen(
                     }
                 },
                 shape = RoundedCornerShape(12.dp),
-                singleLine = true
+                tonalElevation = SearchBarDefaults.Elevation
             )
         },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { 
                     navController.navigate(
-                        "${Screens.PrescriptionSummarize.route}?hasCameraPermission=$hasCameraPermission&hasStoragePermission=$hasStoragePermission"
+                        "${Screens.PrescriptionSummarize.route}?hasCameraPermission=$hasCameraPermission"
                     )
                 }
             ) {

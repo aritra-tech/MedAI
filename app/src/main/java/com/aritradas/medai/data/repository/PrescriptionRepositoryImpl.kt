@@ -153,7 +153,6 @@ class PrescriptionRepositoryImpl @Inject constructor(
                 // Parse the JSON response
                 val summary = parseGeminiResponse(responseText)
                 Resource.Success(summary)
-
             } catch (e: Exception) {
                 Resource.Error("Failed to analyze prescription: ${e.message}")
             }
@@ -173,6 +172,7 @@ class PrescriptionRepositoryImpl @Inject constructor(
                     "summary" to prescription.summary,
                     "savedAt" to prescription.savedAt,
                     "title" to prescription.title,
+                    "report" to prescription.report,
                     "userId" to currentUser.uid
                 )
 
@@ -238,7 +238,8 @@ class PrescriptionRepositoryImpl @Inject constructor(
                             summary = prescriptionSummary,
                             savedAt = (data["savedAt"] as? com.google.firebase.Timestamp)?.toDate()
                                 ?: java.util.Date(),
-                            title = data["title"] as? String ?: "Untitled Prescription"
+                            title = data["title"] as? String ?: "Untitled Prescription",
+                            report = data["report"] as? String ?: ""
                         )
                     } catch (e: Exception) {
                         null // Skip malformed documents
@@ -303,7 +304,8 @@ class PrescriptionRepositoryImpl @Inject constructor(
                     summary = prescriptionSummary,
                     savedAt = (data["savedAt"] as? com.google.firebase.Timestamp)?.toDate()
                         ?: java.util.Date(),
-                    title = data["title"] as? String ?: "Untitled Prescription"
+                    title = data["title"] as? String ?: "Untitled Prescription",
+                    report = data["report"] as? String ?: ""
                 )
 
                 Resource.Success(prescription)

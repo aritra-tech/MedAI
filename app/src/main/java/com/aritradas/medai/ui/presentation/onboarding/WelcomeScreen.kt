@@ -19,8 +19,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SnackbarHostState
@@ -56,6 +58,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.seconds
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun WelcomeScreen(
     navController: NavController,
@@ -134,10 +137,6 @@ fun WelcomeScreen(
         }
     }
 
-    if (uiState.isLoading) {
-        LinearProgressIndicator()
-    }
-
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -197,17 +196,21 @@ fun WelcomeScreen(
                     contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             ) {
-                Icon(
-                    imageVector = ImageVector.vectorResource(id = R.drawable.google_color_icon),
-                    contentDescription = "Google Logo",
-                    modifier = Modifier.size(24.dp),
-                    tint = Color.Unspecified
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = stringResource(R.string.sign_in_with_google),
-                    style = MaterialTheme.typography.titleMedium
-                )
+                if (uiState.isLoading) {
+                    LoadingIndicator()
+                } else {
+                    Icon(
+                        imageVector = ImageVector.vectorResource(id = R.drawable.google_color_icon),
+                        contentDescription = "Google Logo",
+                        modifier = Modifier.size(24.dp),
+                        tint = Color.Unspecified
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = stringResource(R.string.sign_in_with_google),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
             }
         }
     }
