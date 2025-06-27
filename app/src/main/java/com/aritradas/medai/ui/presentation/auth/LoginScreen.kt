@@ -2,8 +2,11 @@ package com.aritradas.medai.ui.presentation.auth
 
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,17 +15,21 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeFlexibleTopAppBar
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -45,6 +52,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -68,6 +76,7 @@ fun LoginScreen(
 
     val errorLiveData by authViewModel.errorLiveData.observeAsState()
     val loginSuccess by authViewModel.loginSuccess.observeAsState()
+    val isLoading by authViewModel.isLoading.observeAsState(false)
 
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -76,7 +85,6 @@ fun LoginScreen(
     val density = LocalDensity.current
     val imeInsets = WindowInsets.ime
     val isKeyboardVisible = imeInsets.getBottom(density) > 0
-
 
     LaunchedEffect(errorLiveData) {
         errorLiveData?.let { error ->
@@ -87,7 +95,9 @@ fun LoginScreen(
     LaunchedEffect(loginSuccess) {
         loginSuccess?.let { success ->
             if (success) {
-                navController.navigate(Screens.Prescription.route)
+                navController.navigate(Screens.Prescription.route) {
+                    popUpTo(Screens.Onboarding.route) { inclusive = true }
+                }
             }
         }
     }
@@ -103,98 +113,138 @@ fun LoginScreen(
             )
         }
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp, vertical = 20.dp)
-                .padding(innerPadding)
-                .imePadding(),
-            horizontalAlignment = Alignment.End,
-            verticalArrangement = Arrangement.Top
-        ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp, vertical = 20.dp)
+                    .padding(innerPadding)
+                    .imePadding(),
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.Top
+            ) {
 
-            OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
-                label = { Text("Email") },
-                placeholder = { Text("Enter your email") },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Email,
-                    imeAction = ImeAction.Next,
-                    autoCorrect = false
-                ),
-                keyboardActions = KeyboardActions(
-                    onNext = {
-                        focusManager.moveFocus(FocusDirection.Down)
-                    }
-                ),
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    label = { Text("Email") },
+                    placeholder = { Text("Enter your email") },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Email,
+                        imeAction = ImeAction.Next,
+                        autoCorrect = false
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onNext = {
+                            focusManager.moveFocus(FocusDirection.Down)
+                        }
+                    ),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isLoading
+                )
 
-            Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-            OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                label = { Text("Password") },
-                placeholder = { Text("Enter your password") },
-                trailingIcon = {
-                    IconButton(
-                        onClick = { passwordVisible = !passwordVisible }
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = { Text("Password") },
+                    placeholder = { Text("Enter your password") },
+                    trailingIcon = {
+                        IconButton(
+                            onClick = { passwordVisible = !passwordVisible },
+                            enabled = !isLoading
+                        ) {
+                            Icon(
+                                imageVector = if (passwordVisible) Icons.Default.VisibilityOff
+                                else Icons.Default.Visibility,
+                                contentDescription = if (passwordVisible) "Hide password"
+                                else "Show password"
+                            )
+                        }
+                    },
+                    visualTransformation = if (passwordVisible) VisualTransformation.None
+                    else PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                            if (!isLoading) {
+                                focusManager.clearFocus()
+                                keyboardController?.hide()
+                                authViewModel.logIn(email, password)
+                            }
+                        }
+                    ),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isLoading
+                )
+
+                AnimatedVisibility(!isKeyboardVisible) {
+                    TextButton(
+                        onClick = {
+                            navController.navigate(Screens.Forgot.route)
+                        },
+                        enabled = !isLoading
                     ) {
-                        Icon(
-                            imageVector = if (passwordVisible) Icons.Default.VisibilityOff
-                            else Icons.Default.Visibility,
-                            contentDescription = if (passwordVisible) "Hide password"
-                            else "Show password"
+                        Text(text = "Forgot Password?")
+                    }
+                }
+
+                Spacer(Modifier.weight(1f))
+
+                Button(
+                    onClick = {
+                        focusManager.clearFocus()
+                        authViewModel.logIn(email, password)
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = MaterialTheme.shapes.extraLarge,
+                    enabled = isSignInButtonEnable && !isLoading
+                ) {
+                    if (isLoading) {
+                        LoadingIndicator(
+                            modifier = Modifier.size(20.dp)
+                        )
+                    } else {
+                        Text(
+                            text = "Sign In",
+                            style = MaterialTheme.typography.titleMedium
                         )
                     }
-                },
-                visualTransformation = if (passwordVisible) VisualTransformation.None
-                else PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password,
-                    imeAction = ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(
-                    onDone = {
-                        focusManager.clearFocus()
-                        keyboardController?.hide()
-                        authViewModel.logIn(email, password)
-                    }
-                ),
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-            )
-
-            AnimatedVisibility(!isKeyboardVisible) {
-                TextButton(
-                    onClick = {
-                        navController.navigate(Screens.Forgot.route)
-                    }
-                ) {
-                    Text(text = "Forgot Password?")
                 }
-            }
 
-            Spacer(Modifier.weight(1f))
+                Spacer(modifier = Modifier.height(15.dp))
 
-            Button(
-                onClick = {
-                    focusManager.clearFocus()
-                    authViewModel.logIn(email, password)
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape = MaterialTheme.shapes.extraLarge,
-                enabled = isSignInButtonEnable
-            ) {
-                Text(
-                    text = "Sign In",
-                    style = MaterialTheme.typography.titleMedium
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "Don't have an account?",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Text(
+                        modifier = Modifier.clickable {
+                            if (!isLoading) {
+                                navController.navigate(Screens.SignUp.route)
+                            }
+                        },
+                        text = "Create an Account",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = if (isLoading) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                        else MaterialTheme.colorScheme.primary
+                    )
+                }
             }
         }
     }

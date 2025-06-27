@@ -1,8 +1,10 @@
 package com.aritradas.medai.ui.presentation.auth
 
 import android.widget.Toast
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,6 +13,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -22,6 +26,7 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeFlexibleTopAppBar
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -37,10 +42,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.graphics.BlendMode.Companion.Screen
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -48,6 +55,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.aritradas.medai.navigation.Screens
 import com.google.firebase.auth.FirebaseUser
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -64,19 +72,13 @@ fun SignUpScreen(
     var userPassword by remember { mutableStateOf("") }
     val errorLiveData by authViewModel.errorLiveData.observeAsState()
     val registerStatus by authViewModel.registerStatus.observeAsState(false)
-    var isLoading by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
     var passwordVisible by remember { mutableStateOf(false) }
-
-    val density = LocalDensity.current
-    val imeInsets = WindowInsets.ime
-    val isKeyboardVisible = imeInsets.getBottom(density) > 0
-
+    val isLoading by authViewModel.isLoading.observeAsState(false)
 
     LaunchedEffect(registerStatus) {
         if (registerStatus) {
-            isLoading = false
             Toast.makeText(
                 context,
                 "Account created successfully", Toast.LENGTH_SHORT
@@ -86,7 +88,6 @@ fun SignUpScreen(
 
     LaunchedEffect(errorLiveData) {
         errorLiveData?.let { error ->
-            isLoading = false
             Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
         }
     }
@@ -95,7 +96,7 @@ fun SignUpScreen(
     Scaffold(
         topBar = {
             LargeFlexibleTopAppBar(
-                title = { Text("Log in") },
+                title = { Text("Sign Up") },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background,
                     scrolledContainerColor = MaterialTheme.colorScheme.background
@@ -131,6 +132,8 @@ fun SignUpScreen(
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             OutlinedTextField(
                 value = userEmail,
@@ -212,9 +215,36 @@ fun SignUpScreen(
                     .fillMaxWidth()
                     .height(56.dp),
                 shape = MaterialTheme.shapes.extraLarge,
+                enabled = !isLoading
+            ) {
+                if (isLoading) {
+                    LoadingIndicator(
+                        modifier = Modifier.size(20.dp)
+                    )
+                } else {
+                    Text(
+                        text = "Sign Up",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(15.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "Sign Up",
+                    text = "Already have an account?",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    modifier = Modifier.clickable {
+                        navController.navigate(Screens.Login.route)
+                    },
+                    text = "Login",
                     style = MaterialTheme.typography.titleMedium
                 )
             }

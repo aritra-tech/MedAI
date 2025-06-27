@@ -3,6 +3,7 @@ package com.aritradas.medai.ui.presentation.splash
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.aritradas.medai.domain.repository.AuthRepository
+import com.aritradas.medai.navigation.Screens
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,9 +33,9 @@ class SplashViewModel @Inject constructor(
             delay(1500L)
 
             val destination = if (isUserSignedIn()) {
-                "prescription_screen"
+                Screens.Prescription.route
             } else {
-                "onboarding_screen"
+                Screens.Onboarding.route
             }
 
             _navigationDestination.value = destination
@@ -44,5 +45,9 @@ class SplashViewModel @Inject constructor(
 
     fun isUserSignedIn(): Boolean {
         return authRepository.getCurrentUser() != null
+    }
+
+    fun onNavigationComplete() {
+        _navigationDestination.value = null
     }
 }

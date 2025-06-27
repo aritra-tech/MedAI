@@ -10,9 +10,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.BlendMode.Companion.Screen
-import androidx.navigation.NavType.Companion.StringType
 import androidx.navigation.NavType.Companion.BoolType
+import androidx.navigation.NavType.Companion.StringType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -44,6 +43,7 @@ fun Navigation(splashViewModel: SplashViewModel) {
             navController.navigate(destination) {
                 popUpTo("loading") { inclusive = true }
             }
+            splashViewModel.onNavigationComplete()
         }
     }
 

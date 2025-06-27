@@ -172,8 +172,7 @@ class PrescriptionRepositoryImpl @Inject constructor(
                     "summary" to prescription.summary,
                     "savedAt" to prescription.savedAt,
                     "title" to prescription.title,
-                    "report" to prescription.report,
-                    "userId" to currentUser.uid
+                    "report" to prescription.report
                 )
 
                 val documentRef = firestore

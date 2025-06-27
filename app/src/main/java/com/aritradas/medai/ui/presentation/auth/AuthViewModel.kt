@@ -20,6 +20,7 @@ class AuthViewModel : ViewModel() {
     val errorLiveData = MutableLiveData<String>()
     val registerStatus = MutableLiveData<Boolean>()
     val loginSuccess = MutableLiveData<Boolean>()
+    val isLoading = MutableLiveData<Boolean>() // Add loading state
 
     fun resetPassword(email: String) = runIO {
         val trimmedEmail = email.trim()
@@ -29,10 +30,13 @@ class AuthViewModel : ViewModel() {
             return@runIO
         }
 
+        isLoading.postValue(true) // Start loading
         FirebaseAuth.getInstance().sendPasswordResetEmail(trimmedEmail)
             .addOnSuccessListener {
+                isLoading.postValue(false) // Stop loading
                 resetPassword.postValue(true)
             }.addOnFailureListener {
+                isLoading.postValue(false) // Stop loading
                 errorLiveData.postValue(it.message.toString())
             }
     }
@@ -56,9 +60,11 @@ class AuthViewModel : ViewModel() {
             return@runIO
         }
 
+        isLoading.postValue(true) // Start loading
         delay(2000L)
         auth.signInWithEmailAndPassword(trimmedEmail, password)
             .addOnCompleteListener { task ->
+                isLoading.postValue(false) // Stop loading
                 if (task.isSuccessful) {
                     loginSuccess.postValue(true)
                 } else {
@@ -101,6 +107,7 @@ class AuthViewModel : ViewModel() {
             }
         }
 
+        isLoading.postValue(true) // Start loading
         delay(2000L)
         Timber.tag("AuthViewModel").d("Attempting to create user with email: '$trimmedEmail'")
 
@@ -117,20 +124,24 @@ class AuthViewModel : ViewModel() {
                             .document(it.uid)
                             .set(userProfile)
                             .addOnSuccessListener {
+                                isLoading.postValue(false) // Stop loading
                                 Timber.tag("AuthViewModel")
                                     .d("User profile is successfully created for user %s", user.uid)
                                 onSignedUp(user)
                                 registerStatus.postValue(true)
                             }
                             .addOnFailureListener { exception ->
+                                isLoading.postValue(false) // Stop loading
                                 Timber.tag("AuthViewModel")
                                     .e("Failed to create user profile: %s", exception.message)
                                 errorLiveData.postValue("Failed to create user profile: ${exception.message}")
                             }
                     } ?: run {
+                        isLoading.postValue(false) // Stop loading
                         errorLiveData.postValue("User is null after creation")
                     }
                 } else {
+                    isLoading.postValue(false) // Stop loading
                     val errorMessage = task.exception?.message ?: "Unknown error occurred"
                     Timber.tag("AuthViewModel").e("Sign up failed: %s", errorMessage)
                     errorLiveData.postValue("Sign up failed: $errorMessage")
