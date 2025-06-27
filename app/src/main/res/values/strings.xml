@@ -2,6 +2,7 @@
     <string name="app_name">MedAI</string>
     <string name="loading">Loading...</string>
     <string name="google_sign_in_failed_no_id_token">Google Sign-In failed: No ID Token</string>
+    <string name="account_created_successfully">Account created successfully</string>
     <string name="google_sign_in_cancelled">Google Sign-In cancelled</string>
     <string name="login_successful">Login Successful!</string>
     <string name="dismiss">Dismiss</string>
