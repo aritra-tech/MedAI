@@ -21,9 +21,29 @@ object UtilsKt {
     }
 
     fun validateName(name: String?): Boolean {
-        return !name.isNullOrEmpty() &&
-                name.split(" ")
-                    .all { word -> word.isNotEmpty() && Pattern.matches("^([A-Za-z.]+)*", word) }
+        if (name.isNullOrEmpty() || name.trim().isEmpty()) {
+            return false
+        }
+
+        val trimmedName = name.trim()
+
+        // Check minimum length
+        if (trimmedName.length < 2) {
+            return false
+        }
+
+        // Check if name contains only letters, spaces, and dots
+        val namePattern = "^[A-Za-z.\\s]+$"
+        if (!trimmedName.matches(Regex(namePattern))) {
+            return false
+        }
+
+        // Check that each word is valid (no consecutive spaces or dots)
+        return trimmedName.split("\\s+".toRegex())
+            .all { word ->
+                word.isNotEmpty() &&
+                        word.matches(Regex("^[A-Za-z]+\\.?[A-Za-z]*$"))
+            }
     }
 
     fun validatePassword(password: String): Boolean {

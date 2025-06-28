@@ -2,6 +2,8 @@ package com.aritradas.medai.ui.presentation.auth
 
 import android.R.attr.password
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -41,6 +43,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -56,9 +59,13 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.aritradas.medai.R
 import com.aritradas.medai.navigation.Screens
 import com.aritradas.medai.utils.UtilsKt
 import com.aritradas.medai.utils.UtilsKt.findActivity
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -66,6 +73,9 @@ fun ForgotPasswordScreen(
     authViewModel: AuthViewModel = hiltViewModel()
 ) {
 
+    val scope = rememberCoroutineScope()
+    val activity = LocalActivity.current
+    var backPressedState by remember { mutableStateOf(false) }
     val context = LocalContext.current
     var email by rememberSaveable { mutableStateOf("") }
     val enableSendBtn by remember { derivedStateOf { UtilsKt.validateEmail(email) } }
@@ -87,6 +97,21 @@ fun ForgotPasswordScreen(
     LaunchedEffect(errorLiveData) {
         errorLiveData?.let { error ->
             Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    BackHandler {
+        if (backPressedState) {
+            activity?.finish()
+        } else {
+            backPressedState = true
+            Toast.makeText(context,
+                context.getString(R.string.press_back_again_to_exit), Toast.LENGTH_SHORT).show()
+
+            scope.launch {
+                delay(2.seconds)
+                backPressedState = false
+            }
         }
     }
 

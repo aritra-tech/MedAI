@@ -1,6 +1,8 @@
 package com.aritradas.medai.ui.presentation.auth
 
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -17,13 +19,13 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -43,16 +45,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
-import androidx.compose.ui.graphics.BlendMode.Companion.Screen
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -60,8 +61,12 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.aritradas.medai.R
 import com.aritradas.medai.navigation.Screens
 import com.aritradas.medai.utils.UtilsKt.validateEmail
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -69,6 +74,9 @@ fun LoginScreen(
     navController: NavController,
     authViewModel: AuthViewModel = hiltViewModel()
 ) {
+    val scope = rememberCoroutineScope()
+    val activity = LocalActivity.current
+    var backPressedState by remember { mutableStateOf(false) }
     val context = LocalContext.current
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -102,6 +110,21 @@ fun LoginScreen(
         }
     }
 
+    BackHandler {
+        if (backPressedState) {
+            activity?.finish()
+        } else {
+            backPressedState = true
+            Toast.makeText(context,
+                context.getString(R.string.press_back_again_to_exit), Toast.LENGTH_SHORT).show()
+
+            scope.launch {
+                delay(2.seconds)
+                backPressedState = false
+            }
+        }
+    }
+
     Scaffold(
         topBar = {
             LargeFlexibleTopAppBar(
@@ -119,7 +142,7 @@ fun LoginScreen(
                     .fillMaxSize()
                     .padding(horizontal = 16.dp, vertical = 20.dp)
                     .padding(innerPadding)
-                    .imePadding(),
+                    .windowInsetsPadding(WindowInsets.ime),
                 horizontalAlignment = Alignment.End,
                 verticalArrangement = Arrangement.Top
             ) {
@@ -141,7 +164,11 @@ fun LoginScreen(
                     ),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = !isLoading
+                    enabled = !isLoading,
+                    isError = email.isNotEmpty() && !validateEmail(email),
+                    supportingText = if (email.isNotEmpty() && !validateEmail(email)) {
+                        { Text("Please enter a valid email address") }
+                    } else null
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))

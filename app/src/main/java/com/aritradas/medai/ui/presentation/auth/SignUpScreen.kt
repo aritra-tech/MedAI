@@ -1,6 +1,8 @@
 package com.aritradas.medai.ui.presentation.auth
 
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,6 +17,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -34,20 +37,20 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
-import androidx.compose.ui.graphics.BlendMode.Companion.Screen
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -55,8 +58,14 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.aritradas.medai.R
 import com.aritradas.medai.navigation.Screens
+import com.aritradas.medai.utils.UtilsKt.validateEmail
+import com.aritradas.medai.utils.UtilsKt.validateName
 import com.google.firebase.auth.FirebaseUser
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -66,6 +75,9 @@ fun SignUpScreen(
     authViewModel: AuthViewModel = hiltViewModel()
 ) {
 
+    val scope = rememberCoroutineScope()
+    val activity = LocalActivity.current
+    var backPressedState by remember { mutableStateOf(false) }
     val context = LocalContext.current
     var userName by remember { mutableStateOf("") }
     var userEmail by remember { mutableStateOf("") }
@@ -75,7 +87,14 @@ fun SignUpScreen(
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
     var passwordVisible by remember { mutableStateOf(false) }
+    val density = LocalDensity.current
+    val isKeyboardVisible = WindowInsets.ime.getBottom(density) > 0
     val isLoading by authViewModel.isLoading.observeAsState(false)
+    val isSignUpButtonEnabled by remember {
+        derivedStateOf {
+            validateName(userName) && validateEmail(userEmail) && userPassword.isNotEmpty()
+        }
+    }
 
     LaunchedEffect(registerStatus) {
         if (registerStatus) {
@@ -92,6 +111,20 @@ fun SignUpScreen(
         }
     }
 
+    BackHandler {
+        if (backPressedState) {
+            activity?.finish()
+        } else {
+            backPressedState = true
+            Toast.makeText(context,
+                context.getString(R.string.press_back_again_to_exit), Toast.LENGTH_SHORT).show()
+
+            scope.launch {
+                delay(2.seconds)
+                backPressedState = false
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -109,7 +142,7 @@ fun SignUpScreen(
                 .fillMaxSize()
                 .padding(horizontal = 16.dp, vertical = 20.dp)
                 .padding(innerPadding)
-                .imePadding(),
+                .windowInsetsPadding(WindowInsets.ime),
             horizontalAlignment = Alignment.End,
             verticalArrangement = Arrangement.Top
         ) {
@@ -120,7 +153,7 @@ fun SignUpScreen(
                 label = { Text("Name") },
                 placeholder = { Text("Enter your Name") },
                 keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Email,
+                    keyboardType = KeyboardType.Text,
                     imeAction = ImeAction.Next,
                     autoCorrect = false
                 ),
@@ -130,7 +163,12 @@ fun SignUpScreen(
                     }
                 ),
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isLoading,
+                isError = userName.isNotEmpty() && !validateName(userName),
+                supportingText = if (userName.isNotEmpty() && !validateName(userName)) {
+                    { Text("Please enter a valid name") }
+                } else null
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -151,7 +189,12 @@ fun SignUpScreen(
                     }
                 ),
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isLoading,
+                isError = userEmail.isNotEmpty() && !validateEmail(userEmail),
+                supportingText = if (userEmail.isNotEmpty() && !validateEmail(userEmail)) {
+                    { Text("Please enter a valid email address") }
+                } else null
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -163,7 +206,8 @@ fun SignUpScreen(
                 placeholder = { Text("Enter your password") },
                 trailingIcon = {
                     IconButton(
-                        onClick = { passwordVisible = !passwordVisible }
+                        onClick = { passwordVisible = !passwordVisible },
+                        enabled = !isLoading
                     ) {
                         Icon(
                             imageVector = if (passwordVisible) Icons.Default.VisibilityOff
@@ -181,20 +225,23 @@ fun SignUpScreen(
                 ),
                 keyboardActions = KeyboardActions(
                     onDone = {
-                        focusManager.clearFocus()
-                        keyboardController?.hide()
-                        authViewModel.signUp(
-                            userName,
-                            userEmail,
-                            userPassword,
-                            onSignedUp = { signUpUser ->
-                                onSignUp(signUpUser)
-                            }
-                        )
+                        if (!isLoading && isSignUpButtonEnabled) {
+                            focusManager.clearFocus()
+                            keyboardController?.hide()
+                            authViewModel.signUp(
+                                userName,
+                                userEmail,
+                                userPassword,
+                                onSignedUp = { signUpUser ->
+                                    onSignUp(signUpUser)
+                                }
+                            )
+                        }
                     }
                 ),
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
+                enabled = !isLoading
             )
 
             Spacer(Modifier.weight(1f))
@@ -215,7 +262,7 @@ fun SignUpScreen(
                     .fillMaxWidth()
                     .height(56.dp),
                 shape = MaterialTheme.shapes.extraLarge,
-                enabled = !isLoading
+                enabled = isSignUpButtonEnabled && !isLoading
             ) {
                 if (isLoading) {
                     LoadingIndicator(
@@ -242,10 +289,14 @@ fun SignUpScreen(
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     modifier = Modifier.clickable {
-                        navController.navigate(Screens.Login.route)
+                        if (!isLoading) {
+                            navController.navigate(Screens.Login.route)
+                        }
                     },
                     text = "Login",
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleMedium,
+                    color = if (isLoading) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                    else MaterialTheme.colorScheme.primary
                 )
             }
         }
