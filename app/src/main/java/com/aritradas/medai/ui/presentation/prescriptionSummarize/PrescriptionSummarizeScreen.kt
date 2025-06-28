@@ -48,6 +48,7 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -101,6 +102,7 @@ fun PrescriptionSummarizeScreen(
     var showPermissionDialog by remember { mutableStateOf(false) }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     var cameraUri by remember { mutableStateOf<Uri?>(null) }
+    var showBackWarningDialog by remember { mutableStateOf(false) }
 
     val createImageFile = {
         val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
@@ -149,12 +151,14 @@ fun PrescriptionSummarizeScreen(
             )
         )
         showDialog = false
+        Unit
     }
 
     val handleRemoveImage = {
         imageUri = null
         cameraUri = null
         prescriptionViewModel.clearSummary()
+        Unit
     }
 
     val handleSummarize = {
@@ -167,7 +171,9 @@ fun PrescriptionSummarizeScreen(
         navController.popBackStack()
     }
 
-    val handleReport = { showReportTypeDialog = true }
+    val handleReport = {
+        showReportTypeDialog = true
+    }
     val handleReportSubmit = {
         if (reportReason.isNotBlank()) {
             prescriptionViewModel.updateReport(reportReason)
@@ -177,6 +183,7 @@ fun PrescriptionSummarizeScreen(
             Toast.makeText(context, "Report has been submitted", Toast.LENGTH_SHORT).show()
             reportReason = ""
         }
+        Unit
     }
 
     val handleReportTypeSelection = { reason: String ->
@@ -189,6 +196,18 @@ fun PrescriptionSummarizeScreen(
             showReportTypeDialog = false
             Toast.makeText(context, "Report has been submitted", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    val handleBackNavigation = {
+        val hasOngoingProcess = uiState.isValidating || uiState.isLoading
+        val hasSummary = uiState.summary != null
+
+        if (hasOngoingProcess || hasSummary) {
+            showBackWarningDialog = true
+        } else {
+            navController.popBackStack()
+        }
+        Unit
     }
 
     Scaffold(
@@ -205,7 +224,7 @@ fun PrescriptionSummarizeScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(onClick = handleBackNavigation) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back"
@@ -398,6 +417,41 @@ fun PrescriptionSummarizeScreen(
             uiState.summary?.let { summary ->
                 Spacer(modifier = Modifier.height(24.dp))
 
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "⚠️ AI-generated content - verify with doctor",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.weight(1f)
+                        )
+
+                        IconButton(
+                            onClick = handleReport,
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Flag,
+                                contentDescription = "Report content",
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
                 // Summary Card
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -441,7 +495,7 @@ fun PrescriptionSummarizeScreen(
                             }
                         }
 
-                        if (summary.dosageInstructions.isNotEmpty()) {
+                        if (summary.warnings.isNotEmpty()) {
                             Spacer(modifier = Modifier.height(16.dp))
                             Card(
                                 colors = CardDefaults.cardColors(
@@ -471,42 +525,7 @@ fun PrescriptionSummarizeScreen(
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    )
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "⚠️ AI-generated content - verify with doctor",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier.weight(1f)
-                        )
-
-                        IconButton(
-                            onClick = handleReport,
-                            modifier = Modifier.size(24.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Flag,
-                                contentDescription = "Report content",
-                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
-                    }
-                }
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 
@@ -743,6 +762,24 @@ fun PrescriptionSummarizeScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showReportDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    if (showBackWarningDialog) {
+        AlertDialog(
+            onDismissRequest = { showBackWarningDialog = false },
+            title = { Text("Unsaved Changes") },
+            text = { Text("There are unsaved changes. Are you sure you want to go back?") },
+            confirmButton = {
+                TextButton(onClick = { navController.popBackStack() }) {
+                    Text("Okay")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showBackWarningDialog = false }) {
                     Text("Cancel")
                 }
             }
