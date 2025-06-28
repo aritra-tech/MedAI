@@ -11,6 +11,7 @@ import com.aritradas.medai.domain.repository.BiometricAuthListener
 import com.aritradas.medai.utils.AppBioMetricManager
 import com.aritradas.medai.utils.Resource
 import com.aritradas.medai.utils.runIO
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -70,18 +71,8 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun logout() = runIO {
-        when (authRepository.signOut()) {
-            is Resource.Success -> {
-                onLogOutComplete.postValue(true)
-            }
-
-            is Resource.Error -> {
-                onLogOutComplete.postValue(true)
-            }
-
-            is Resource.Loading -> {
-            }
-        }
+        FirebaseAuth.getInstance().signOut()
+        onLogOutComplete.postValue(true)
     }
 
     fun deleteAccount() = runIO {
