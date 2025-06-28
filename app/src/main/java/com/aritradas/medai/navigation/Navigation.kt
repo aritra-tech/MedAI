@@ -10,13 +10,16 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavType.Companion.StringType
 import androidx.navigation.NavType.Companion.BoolType
+import androidx.navigation.NavType.Companion.StringType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.aritradas.medai.ui.presentation.auth.ForgotPasswordScreen
+import com.aritradas.medai.ui.presentation.auth.LoginScreen
+import com.aritradas.medai.ui.presentation.auth.SignUpScreen
 import com.aritradas.medai.ui.presentation.onboarding.WelcomeScreen
 import com.aritradas.medai.ui.presentation.prescription.PrescriptionScreen
 import com.aritradas.medai.ui.presentation.prescriptionDetails.PrescriptionDetailsScreen
@@ -40,6 +43,7 @@ fun Navigation(splashViewModel: SplashViewModel) {
             navController.navigate(destination) {
                 popUpTo("loading") { inclusive = true }
             }
+            splashViewModel.onNavigationComplete()
         }
     }
 
@@ -75,7 +79,24 @@ fun Navigation(splashViewModel: SplashViewModel) {
                     navController
                 )
             }
-            
+
+            composable(Screens.Login.route) {
+                LoginScreen(navController)
+            }
+
+            composable(Screens.SignUp.route) {
+                SignUpScreen(
+                    navController,
+                    onSignUp = {
+                        navController.navigate(Screens.Prescription.route)
+                    }
+                )
+            }
+
+            composable(Screens.Forgot.route) {
+                ForgotPasswordScreen()
+            }
+
             composable(Screens.Prescription.route) {
                 PrescriptionScreen(
                     navController = navController,
