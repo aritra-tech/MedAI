@@ -22,4 +22,9 @@ object Constants {
 
     const val TERMS_AND_CONDITIONS = "https://www.freeprivacypolicy.com/live/aac1e8c9-0eaf-4efa-87cc-c7cf2ddae29b"
     const val PRIVACY_POLICY = "https://www.freeprivacypolicy.com/live/6974b6ca-8e44-4fc3-b33b-53ef9eb988ca"
+    const val PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.aritradas.medai"
+
+    const val INVITE = """
+            Hey there! I've been using this amazing app and thought you might like it too! 😊 Check it out: https://play.google.com/store/apps/details?id=com.aritradas.medai
+    """
 }

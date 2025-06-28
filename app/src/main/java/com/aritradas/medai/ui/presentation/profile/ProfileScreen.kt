@@ -1,5 +1,6 @@
 package com.aritradas.medai.ui.presentation.profile
 
+import android.content.Intent
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
@@ -35,6 +36,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
@@ -43,6 +45,7 @@ import com.aritradas.medai.R
 import com.aritradas.medai.navigation.Screens
 import com.aritradas.medai.ui.presentation.profile.components.SettingsCard
 import com.aritradas.medai.ui.presentation.profile.components.SettingsItemGroup
+import com.aritradas.medai.utils.Constants
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.seconds
@@ -153,7 +156,9 @@ fun ProfileScreen(
                     itemSubText = "Rate MedAI on the Play Store",
                     iconVector = Icons.Outlined.RateReview,
                     onClick = {
-
+                        val intent = Intent(Intent.ACTION_VIEW)
+                        intent.data = Constants.PLAY_STORE_URL.toUri()
+                        context.startActivity(intent)
                     }
                 )
 
@@ -166,7 +171,12 @@ fun ProfileScreen(
                     itemSubText = "Like MedAI? Share with friends!",
                     iconVector = Icons.Outlined.Share,
                     onClick = {
-
+                        val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                            putExtra(Intent.EXTRA_TEXT, Constants.INVITE)
+                            type = "text/plain"
+                        }
+                        val shareIntent = Intent.createChooser(sendIntent, null)
+                        context.startActivity(shareIntent)
                     }
                 )
             }
@@ -179,7 +189,7 @@ fun ProfileScreen(
             )
             Text(
                 modifier = Modifier.padding(bottom = 10.dp),
-                text = "Build with 💜 for peoples",
+                text = "Build with 💜 for people",
                 style = MaterialTheme.typography.titleSmall
             )
         }
