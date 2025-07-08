@@ -33,7 +33,7 @@ class PrescriptionRepositoryImpl @Inject constructor(
 ) : PrescriptionRepository {
 
     private val generativeModel = GenerativeModel(
-        modelName = "gemini-1.5-flash",
+        modelName = "gemini-2.5-pro",
         apiKey = BuildConfig.GEMINI_API_KEY
     )
 
