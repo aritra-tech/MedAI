@@ -30,6 +30,8 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -518,6 +520,29 @@ fun PrescriptionSummarizeScreen(
                                         )
                                     }
                                 }
+                            }
+                        }
+
+                        if (summary.prescriptionReason.isNotEmpty()) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.Start
+                            ) {
+                                AssistChip(
+                                    modifier = Modifier.padding(vertical = 4.dp),
+                                    onClick = {},
+                                    label = {
+                                        Text(
+                                            text = summary.prescriptionReason,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    },
+                                    shape = RoundedCornerShape(50),
+                                    colors = AssistChipDefaults.assistChipColors(
+                                        containerColor = MaterialTheme.colorScheme.surface
+                                    )
+                                )
                             }
                         }
                     }

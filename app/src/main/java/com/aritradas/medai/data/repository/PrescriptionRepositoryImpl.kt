@@ -124,6 +124,7 @@ class PrescriptionRepositoryImpl @Inject constructor(
                         "instructions": [
                             "List of clear patient-friendly instructions based on the prescription. Examples: Apply cream locally, Take with food, Use support bandage"
                         ],
+                        "prescriptionReason": "The main reason or medical condition for which this prescription was issued, e.g., Diabetes, Hypertension, Allergies. If not clear, use 'Not clearly visible' or infer based on diagnosis/medicines.",
                         "dosageInstructions": [
                           "Instructions related to how to take the medicine, e.g., Take after food, Do not crush"
                         ],
@@ -148,7 +149,8 @@ class PrescriptionRepositoryImpl @Inject constructor(
                 }
 
                 val response = generativeModel.generateContent(inputContent)
-                val responseText = response.text?.trim() ?: throw Exception("No response from Gemini")
+                val responseText =
+                    response.text?.trim() ?: throw Exception("No response from Gemini")
 
                 // Parse the JSON response
                 val summary = parseGeminiResponse(responseText)
@@ -172,7 +174,8 @@ class PrescriptionRepositoryImpl @Inject constructor(
                     "summary" to prescription.summary,
                     "savedAt" to prescription.savedAt,
                     "title" to prescription.title,
-                    "report" to prescription.report
+                    "report" to prescription.report,
+                    "prescriptionReason" to prescription.summary.prescriptionReason // ADDED: Top-level
                 )
 
                 val documentRef = firestore
@@ -229,7 +232,10 @@ class PrescriptionRepositoryImpl @Inject constructor(
                             dosageInstructions = (summaryMap["dosageInstructions"] as? List<String>)
                                 ?: emptyList(),
                             summary = summaryMap["summary"] as? String ?: "",
-                            warnings = (summaryMap["warnings"] as? List<String>) ?: emptyList()
+                            warnings = (summaryMap["warnings"] as? List<String>) ?: emptyList(),
+                            prescriptionReason = summaryMap["prescriptionReason"] as? String
+                                ?: (data["prescriptionReason"] as? String
+                                    ?: "")
                         )
 
                         SavedPrescription(
@@ -295,7 +301,9 @@ class PrescriptionRepositoryImpl @Inject constructor(
                     dosageInstructions = (summaryMap["dosageInstructions"] as? List<String>)
                         ?: emptyList(),
                     summary = summaryMap["summary"] as? String ?: "",
-                    warnings = (summaryMap["warnings"] as? List<String>) ?: emptyList()
+                    warnings = (summaryMap["warnings"] as? List<String>) ?: emptyList(),
+                    prescriptionReason = summaryMap["prescriptionReason"] as? String
+                        ?: (data["prescriptionReason"] as? String ?: "")
                 )
 
                 val prescription = SavedPrescription(
@@ -336,7 +344,8 @@ class PrescriptionRepositoryImpl @Inject constructor(
                 .trim()
 
             // Parse JSON response
-            val geminiResponse = gson.fromJson(cleanedResponse, GeminiPrescriptionResponse::class.java)
+            val geminiResponse =
+                gson.fromJson(cleanedResponse, GeminiPrescriptionResponse::class.java)
 
             // Convert to domain model
             PrescriptionSummary(
@@ -351,7 +360,8 @@ class PrescriptionRepositoryImpl @Inject constructor(
                 },
                 dosageInstructions = geminiResponse.dosageInstructions,
                 summary = geminiResponse.summary,
-                warnings = geminiResponse.warnings
+                warnings = geminiResponse.warnings,
+                prescriptionReason = geminiResponse.prescriptionReason // Ensure this is set
             )
 
         } catch (e: JsonSyntaxException) {
@@ -363,8 +373,13 @@ class PrescriptionRepositoryImpl @Inject constructor(
                 doctorName = "Unknown Doctor",
                 medications = emptyList(),
                 dosageInstructions = listOf("Could not parse prescription details"),
-                summary = "Failed to analyze prescription image. Raw response: ${responseText.take(100)}...",
-                warnings = listOf("Please consult with a healthcare professional for accurate information")
+                summary = "Failed to analyze prescription image. Raw response: ${
+                    responseText.take(
+                        100
+                    )
+                }...",
+                warnings = listOf("Please consult with a healthcare professional for accurate information"),
+                prescriptionReason = "Parse error"
             )
         }
     }
@@ -376,7 +391,8 @@ class PrescriptionRepositoryImpl @Inject constructor(
             medications = extractMedicationsFromText(responseText),
             dosageInstructions = extractInstructionsFromText(responseText),
             summary = responseText.take(300) + if (responseText.length > 300) "..." else "",
-            warnings = listOf("AI-generated summary - Please verify with healthcare professional")
+            warnings = listOf("AI-generated summary - Please verify with healthcare professional"),
+            prescriptionReason = "Could not extract reason"
         )
     }
 
@@ -389,7 +405,8 @@ class PrescriptionRepositoryImpl @Inject constructor(
             // Look for medication patterns
             if (line.contains("mg", ignoreCase = true) ||
                 line.contains("tablet", ignoreCase = true) ||
-                line.contains("capsule", ignoreCase = true)) {
+                line.contains("capsule", ignoreCase = true)
+            ) {
 
                 medications.add(
                     Medication(
