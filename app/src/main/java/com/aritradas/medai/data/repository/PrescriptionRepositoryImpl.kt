@@ -131,7 +131,10 @@ class PrescriptionRepositoryImpl @Inject constructor(
                         "warnings": [
                           "Any important warnings, precautions, or side effects mentioned or inferred based on the medicines"
                         ],
-                        "summary": "Summarize the entire prescription in plain, easy-to-understand English. Include what the patient is suffering from, what medications are prescribed, for how long, how they should be taken, and any precautions to follow."
+                        "summary": "Summarize the entire prescription in plain, easy-to-understand English. Include what the patient is suffering from, what medications are prescribed, for how long, how they should be taken, and any precautions to follow.",
+                        "stepsToCure": [
+                          "Step-by-step patient-friendly actionable steps needed to recover/cure, inferred from diagnosis, medications, and instructions (e.g., Follow full course of antibiotics; Take rest for X days; Apply cream as instructed; Maintain good hydration; Contact doctor if symptoms worsen). Whenever possible, make steps as actionable and clear as possible (3-7 steps typical). Include lifestyle advice if relevant. If not enough data, say 'Follow the general advice included in this prescription and consult your doctor for specific steps.'"
+                        ]
                     }
                     If you cannot clearly read certain information, use "Not clearly visible" for that field.
                     For doctorName, look for signatures, printed names, letterheads, or any doctor identification. If found, format as "Dr. [Full Name]". If not clear, use "Unknown Doctor".
@@ -175,7 +178,8 @@ class PrescriptionRepositoryImpl @Inject constructor(
                     "savedAt" to prescription.savedAt,
                     "title" to prescription.title,
                     "report" to prescription.report,
-                    "prescriptionReason" to prescription.summary.prescriptionReason // ADDED: Top-level
+                    "prescriptionReason" to prescription.summary.prescriptionReason,
+                    "stepsToCure" to prescription.summary.stepsToCure
                 )
 
                 val documentRef = firestore
@@ -235,7 +239,9 @@ class PrescriptionRepositoryImpl @Inject constructor(
                             warnings = (summaryMap["warnings"] as? List<String>) ?: emptyList(),
                             prescriptionReason = summaryMap["prescriptionReason"] as? String
                                 ?: (data["prescriptionReason"] as? String
-                                    ?: "")
+                                    ?: ""),
+                            stepsToCure = (summaryMap["stepsToCure"] as? List<String>)
+                                ?: (data["stepsToCure"] as? List<String> ?: emptyList())
                         )
 
                         SavedPrescription(
@@ -303,7 +309,9 @@ class PrescriptionRepositoryImpl @Inject constructor(
                     summary = summaryMap["summary"] as? String ?: "",
                     warnings = (summaryMap["warnings"] as? List<String>) ?: emptyList(),
                     prescriptionReason = summaryMap["prescriptionReason"] as? String
-                        ?: (data["prescriptionReason"] as? String ?: "")
+                        ?: (data["prescriptionReason"] as? String ?: ""),
+                    stepsToCure = (summaryMap["stepsToCure"] as? List<String>)
+                        ?: (data["stepsToCure"] as? List<String> ?: emptyList())
                 )
 
                 val prescription = SavedPrescription(
@@ -337,7 +345,6 @@ class PrescriptionRepositoryImpl @Inject constructor(
 
     private fun parseGeminiResponse(responseText: String): PrescriptionSummary {
         return try {
-            // Clean the response text (remove any markdown formatting)
             val cleanedResponse = responseText
                 .replace("```json", "")
                 .replace("```", "")
@@ -361,7 +368,8 @@ class PrescriptionRepositoryImpl @Inject constructor(
                 dosageInstructions = geminiResponse.dosageInstructions,
                 summary = geminiResponse.summary,
                 warnings = geminiResponse.warnings,
-                prescriptionReason = geminiResponse.prescriptionReason // Ensure this is set
+                prescriptionReason = geminiResponse.prescriptionReason,
+                stepsToCure = geminiResponse.stepsToCure
             )
 
         } catch (e: JsonSyntaxException) {
@@ -379,7 +387,8 @@ class PrescriptionRepositoryImpl @Inject constructor(
                     )
                 }...",
                 warnings = listOf("Please consult with a healthcare professional for accurate information"),
-                prescriptionReason = "Parse error"
+                prescriptionReason = "Parse error",
+                stepsToCure = listOf("Unable to extract steps to cure. Please follow the doctor's advice and reach out for clarification.") // New fallback
             )
         }
     }
@@ -392,7 +401,8 @@ class PrescriptionRepositoryImpl @Inject constructor(
             dosageInstructions = extractInstructionsFromText(responseText),
             summary = responseText.take(300) + if (responseText.length > 300) "..." else "",
             warnings = listOf("AI-generated summary - Please verify with healthcare professional"),
-            prescriptionReason = "Could not extract reason"
+            prescriptionReason = "Could not extract reason",
+            stepsToCure = listOf("General advice: Follow the given medications and instructions, and consult your doctor for a detailed treatment plan.") // fallback steps
         )
     }
 

@@ -78,7 +78,7 @@ fun PrescriptionCard(
                     horizontalArrangement = Arrangement.Start
                 ) {
                     AssistChip(
-                        modifier = Modifier.padding(vertical = 4.dp),
+                        modifier = Modifier.padding(vertical = 8.dp),
                         onClick = {},
                         label = {
                             Text(

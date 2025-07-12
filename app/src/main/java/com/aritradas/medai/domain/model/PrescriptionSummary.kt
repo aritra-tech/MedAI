@@ -16,7 +16,8 @@ data class PrescriptionSummary(
     val summary: String,
     val warnings: List<String>,
     val prescriptionReason: String = "",
-    val report: String = ""
+    val report: String = "",
+    val stepsToCure: List<String> = emptyList()
 )
 
 data class SavedPrescription(
@@ -25,5 +26,6 @@ data class SavedPrescription(
     val savedAt: Date = Date(),
     val title: String = "",
     val report: String = "",
-    val prescriptionReason: String = ""
+    val prescriptionReason: String = "",
+    val stepsToCure: List<String> = emptyList()
 )

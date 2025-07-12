@@ -15,5 +15,6 @@ data class GeminiPrescriptionResponse(
     @SerializedName("dosageInstructions") val dosageInstructions: List<String> = emptyList(),
     @SerializedName("summary") val summary: String = "",
     @SerializedName("warnings") val warnings: List<String> = emptyList(),
-    @SerializedName("prescriptionReason") val prescriptionReason: String = ""
+    @SerializedName("prescriptionReason") val prescriptionReason: String = "",
+    @SerializedName("stepsToCure") val stepsToCure: List<String> = emptyList()
 )

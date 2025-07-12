@@ -496,6 +496,27 @@ fun PrescriptionSummarizeScreen(
                             }
                         }
 
+                        if (summary.stepsToCure.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = "Steps to Get Cured:",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Column {
+                                summary.stepsToCure.forEach { step ->
+                                    Text(
+                                        text = "• $step",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.padding(bottom = 4.dp)
+                                    )
+                                }
+                            }
+                        }
+
                         if (summary.warnings.isNotEmpty()) {
                             Spacer(modifier = Modifier.height(16.dp))
                             Card(
@@ -529,7 +550,7 @@ fun PrescriptionSummarizeScreen(
                                 horizontalArrangement = Arrangement.Start
                             ) {
                                 AssistChip(
-                                    modifier = Modifier.padding(vertical = 4.dp),
+                                    modifier = Modifier.padding(vertical = 8.dp),
                                     onClick = {},
                                     label = {
                                         Text(
