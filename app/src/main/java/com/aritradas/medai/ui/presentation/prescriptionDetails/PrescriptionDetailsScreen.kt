@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Warning
@@ -72,6 +73,8 @@ fun PrescriptionDetailsScreen(
     var showReportDialog by remember { mutableStateOf(false) }
     var showReportTypeDialog by remember { mutableStateOf(false) }
     var reportReason by remember { mutableStateOf("") }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var deleteTriggered by remember { mutableStateOf(false) }
     val handleReport = { showReportTypeDialog = true }
     val handleReportSubmit = {
         if (reportReason.isNotBlank()) {
@@ -79,6 +82,17 @@ fun PrescriptionDetailsScreen(
             showReportTypeDialog = false
             Toast.makeText(context, "Report has been submitted", Toast.LENGTH_SHORT).show()
             reportReason = ""
+        }
+    }
+
+    LaunchedEffect(deleteTriggered) {
+        if (deleteTriggered) {
+            viewModel.deletePrescription(prescriptionId)
+        }
+    }
+    LaunchedEffect(uiState.isDeleted) {
+        if (uiState.isDeleted == true) {
+            navController.popBackStack()
         }
     }
 
@@ -95,6 +109,14 @@ fun PrescriptionDetailsScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back"
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { showDeleteDialog = true }) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Delete Prescription"
                         )
                     }
                 }
@@ -346,6 +368,27 @@ fun PrescriptionDetailsScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showReportDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Delete Prescription") },
+            text = { Text("Are you sure you want to delete this prescription? This action cannot be undone.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDeleteDialog = false
+                    deleteTriggered = true
+                }) {
+                    Text("Yes, Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
                     Text("Cancel")
                 }
             }

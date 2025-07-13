@@ -49,4 +49,27 @@ class PrescriptionDetailsViewModel @Inject constructor(
     fun clearError() {
         _uiState.value = _uiState.value.copy(error = null)
     }
+
+    fun deletePrescription(prescriptionId: String) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            when (val result = repository.deletePrescriptionById(prescriptionId)) {
+                is Resource.Success -> {
+                    _uiState.value = _uiState.value.copy(isLoading = false, isDeleted = true)
+                }
+
+                is Resource.Error -> {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = result.message,
+                        isDeleted = false
+                    )
+                }
+
+                is Resource.Loading -> {
+                    // Already marked as loading above
+                }
+            }
+        }
+    }
 }
