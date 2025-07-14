@@ -330,6 +330,27 @@ class PrescriptionRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun deletePrescriptionById(id: String): Resource<Boolean> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val currentUser = auth.currentUser
+                if (currentUser == null) {
+                    return@withContext Resource.Error("User not authenticated")
+                }
+                firestore
+                    .collection("users")
+                    .document(currentUser.uid)
+                    .collection("prescriptions")
+                    .document(id)
+                    .delete()
+                    .await()
+                Resource.Success(true)
+            } catch (e: Exception) {
+                Resource.Error("Failed to delete prescription: ${e.message}")
+            }
+        }
+    }
+
     private fun uriToBitmap(uri: Uri): Bitmap {
         return try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {

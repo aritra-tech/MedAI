@@ -383,6 +383,7 @@ fun PrescriptionDetailsScreen(
                 TextButton(onClick = {
                     showDeleteDialog = false
                     deleteTriggered = true
+                    navController.popBackStack()
                 }) {
                     Text("Yes, Delete")
                 }
