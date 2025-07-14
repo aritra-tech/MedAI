@@ -11,4 +11,5 @@ interface PrescriptionRepository {
     suspend fun savePrescription(prescription: SavedPrescription): Resource<String>
     suspend fun getSavedPrescriptions(): Resource<List<SavedPrescription>>
     suspend fun getPrescriptionById(id: String): Resource<SavedPrescription>
+    suspend fun deletePrescriptionById(id: String): Resource<Boolean>
 }

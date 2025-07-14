@@ -5,5 +5,6 @@ import com.aritradas.medai.domain.model.SavedPrescription
 data class PrescriptionDetailsUiState(
     val prescription: SavedPrescription? = null,
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val isDeleted: Boolean? = null
 )
