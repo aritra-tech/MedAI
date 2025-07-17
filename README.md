@@ -17,7 +17,6 @@
   </br>
   <a href="https://github.com/aritra-tech/MedAI/actions">
     <img alt="Build" src="https://img.shields.io/github/actions/workflow/status/aritra-tech/notify/ci_build.yml?label=Build&style=for-the-badge"/></a>
-  <img alt="GitHub commits since tagged version (branch)" src="https://img.shields.io/github/commits-since/aritra-tech/MedAI/v1.0.0?color=palegreen&label=Commits&style=for-the-badge">
   <a href="https://github.com/aritra-tech/MedAI/stargazers"><img src="https://img.shields.io/github/stars/aritra-tech/MedAI?color=ffff00&style=for-the-badge"/></a>
   <a href="https://hits.sh/github.com/aritra-tech/MedAI/"><img alt="Hits" src="https://hits.sh/github.com/aritra-tech/MedAI.svg?style=for-the-badge&label=Views&extraCount=10&color=54856b"/></a>
     </br>
