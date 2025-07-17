@@ -22,7 +22,14 @@ I’m building it in public. So the idea is for everyone to contribute, leave co
 <br>
 </h4>
 
-## Features
+<div align="center">
+  
+# ⬇️ Download
+<a href="https://play.google.com/store/apps/details?id=com.aritradas.medai"><img alt="Get it on Google Play" src="https://play.google.com/intl/en_us/badges/images/generic/en-play-badge.png" height=80px />
+<a href="https://github.com/aritra-tech/MedAI/releases"><img alt="Get it on GitHub" src="https://user-images.githubusercontent.com/69304392/148696068-0cfea65d-b18f-4685-82b5-329a330b1c0d.png" height=80px />
+</div>
+
+# Features ✨
 
 - **AI-Powered Prescription Analysis**: Upload a prescription image, and MedAI will:
   - Validate whether the image is a genuine medical prescription.
@@ -43,23 +50,21 @@ I’m building it in public. So the idea is for everyone to contribute, leave co
   - Hilt for dependency injection.
   - Modular, testable repository and ViewModel pattern.
 
-## Technologies Used
+# Built with 🛠
 
 - **Programming Language**: Kotlin
 - **Frameworks & Libraries**:
   - Android Jetpack Compose
   - Firebase (Auth, Firestore, Analytics, Crashlytics, Messaging)
-  - Google Sign-In
   - Hilt (Dependency Injection)
   - Google Gemini (Generative AI for prescription analysis)
-  - DataStore (User preferences)
   - Coil (Image loading)
   - Timber (Logging)
   - Coroutine (Async operations)
   - Gson (JSON parsing)
   - Biometric API (Enhanced authentication)
 
-## Getting Started
+# Getting Started 📢
 
 ### Prerequisites
 
@@ -91,13 +96,6 @@ I’m building it in public. So the idea is for everyone to contribute, leave co
 5. **Build and Run**
    - Connect your Android device or start an emulator.
    - Click "Run".
-
-## Usage
-
-- Sign in using your Google account.
-- Use the camera or gallery to upload a prescription image.
-- Wait for AI analysis and summary.
-- Review, save, and manage your prescriptions securely.
 
 ## Project Structure
 
