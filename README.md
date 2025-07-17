@@ -14,7 +14,13 @@
   <img alt="material" src="https://custom-icon-badges.demolab.com/badge/material%20you-lightblue?style=for-the-badge&logoColor=333&logo=material-you"/></a>
 </p>
 
-MedAI is an Android application that leverages AI to streamline the process of analyzing, validating, and managing medical prescriptions. It empowers users to upload prescription images, have them analyzed using advanced generative AI, and securely store and manage prescription data with robust authentication and privacy features.
+<h4 align="center">📝MedAI is an Android application that leverages AI to streamline the process of analyzing, validating, and managing medical prescriptions. It empowers users to upload prescription images, have them analyzed using advanced generative AI, and securely store and manage prescription data with robust authentication and privacy features.             
+Made with ♥ for people
+<br>
+<br>
+I’m building it in public. So the idea is for everyone to contribute, leave comments, suggest ideas, etc. using the <a href="https://github.com/aritra-tech/MedAI/issues">Issues</a> tab.
+<br>
+</h4>
 
 ## Features
 
