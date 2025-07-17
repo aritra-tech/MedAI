@@ -7,6 +7,7 @@ import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
@@ -54,4 +55,17 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     override fun getCurrentUser() = firebaseAuth.currentUser
+
+    override suspend fun getUserNameFromFirestore(userId: String): String? {
+        return try {
+            val document = FirebaseFirestore.getInstance()
+                .collection("users")
+                .document(userId)
+                .get()
+                .await()
+            document.getString("name")
+        } catch (e: Exception) {
+            null
+        }
+    }
 }
