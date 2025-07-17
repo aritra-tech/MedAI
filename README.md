@@ -12,6 +12,20 @@
   <img alt="Kotlin" src="https://img.shields.io/badge/Kotlin-a503fc?logo=kotlin&logoColor=white&style=for-the-badge"/></a>
   <img alt="Jetpack Compose" src="https://img.shields.io/static/v1?style=for-the-badge&message=Jetpack+Compose&color=4285F4&logo=Jetpack+Compose&logoColor=FFFFFF&label="/></a> 
   <img alt="material" src="https://custom-icon-badges.demolab.com/badge/material%20you-lightblue?style=for-the-badge&logoColor=333&logo=material-you"/></a>
+
+  </br>
+  </br>
+  <a href="https://github.com/aritra-tech/MedAI/actions">
+    <img alt="Build" src="https://img.shields.io/github/actions/workflow/status/aritra-tech/notify/ci_build.yml?label=Build&style=for-the-badge"/></a>
+  <img alt="GitHub commits since tagged version (branch)" src="https://img.shields.io/github/commits-since/aritra-tech/MedAI/v1.0.0?color=palegreen&label=Commits&style=for-the-badge">
+  <a href="https://github.com/aritra-tech/MedAI/stargazers"><img src="https://img.shields.io/github/stars/aritra-tech/MedAI?color=ffff00&style=for-the-badge"/></a>
+  <a href="https://hits.sh/github.com/aritra-tech/MedAI/"><img alt="Hits" src="https://hits.sh/github.com/aritra-tech/MedAI.svg?style=for-the-badge&label=Views&extraCount=10&color=54856b"/></a>
+    </br>
+  <a href="https://github.com/aritra-tech/MedAI/releases"><img src="https://img.shields.io/github/downloads/aritra-tech/medai/total?color=orange&style=for-the-badge"/></a>
+  <img alt="GitHub code size in bytes" src="https://img.shields.io/github/languages/code-size/aritra-tech/MedAI?style=for-the-badge">
+  <a href=""><img src="https://img.shields.io/github/v/release/aritra-tech/medai?color=purple&include_prereleases&logo=github&style=for-the-badge"/></a>
+  <a href="https://play.google.com/store/apps/details?id=com.aritradas.medai"><img src="https://img.shields.io/endpoint?color=purple&logo=google-play&style=for-the-badge&label=Play%20store&url=https%3A%2F%2Fplay.cuzi.workers.dev%2Fplay%3Fi%3Dcom.aritradas.medai%26l%3DAndroid%26m%3D%24version"/></a>
+  </br>
 </p>
 
 <h4 align="center">📝MedAI is an Android application that leverages AI to streamline the process of analyzing, validating, and managing medical prescriptions. It empowers users to upload prescription images, have them analyzed using advanced generative AI, and securely store and manage prescription data with robust authentication and privacy features.             
