@@ -23,6 +23,12 @@ I’m building it in public. So the idea is for everyone to contribute, leave co
 </h4>
 
 <div align="center">
+</br>
+<img src="art/medai_banner.gif"/>
+
+</div>
+
+<div align="center">
   
 # ⬇️ Download
 <a href="https://play.google.com/store/apps/details?id=com.aritradas.medai"><img alt="Get it on Google Play" src="https://play.google.com/intl/en_us/badges/images/generic/en-play-badge.png" height=80px />
