@@ -1,6 +1,7 @@
 package com.aritradas.medai.ui.presentation.prescriptionDetails
 
 import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,9 +19,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Medication
 import androidx.compose.material.icons.outlined.Summarize
 import androidx.compose.material3.AlertDialog
@@ -47,6 +50,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -69,6 +73,8 @@ fun PrescriptionDetailsScreen(
     var showReportDialog by remember { mutableStateOf(false) }
     var showReportTypeDialog by remember { mutableStateOf(false) }
     var reportReason by remember { mutableStateOf("") }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var deleteTriggered by remember { mutableStateOf(false) }
     val handleReport = { showReportTypeDialog = true }
     val handleReportSubmit = {
         if (reportReason.isNotBlank()) {
@@ -76,6 +82,17 @@ fun PrescriptionDetailsScreen(
             showReportTypeDialog = false
             Toast.makeText(context, "Report has been submitted", Toast.LENGTH_SHORT).show()
             reportReason = ""
+        }
+    }
+
+    LaunchedEffect(deleteTriggered) {
+        if (deleteTriggered) {
+            viewModel.deletePrescription(prescriptionId)
+        }
+    }
+    LaunchedEffect(uiState.isDeleted) {
+        if (uiState.isDeleted == true) {
+            navController.popBackStack()
         }
     }
 
@@ -92,6 +109,14 @@ fun PrescriptionDetailsScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back"
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { showDeleteDialog = true }) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Delete Prescription"
                         )
                     }
                 }
@@ -144,6 +169,16 @@ fun PrescriptionDetailsScreen(
                                 InstructionsCard(
                                     title = "Dosage Instructions",
                                     instructions = uiState.prescription!!.summary.dosageInstructions
+                                )
+                            }
+                        }
+
+                        if (uiState.prescription!!.summary.stepsToCure.isNotEmpty()) {
+                            item {
+                                InstructionsCard(
+                                    title = "How to recover fast?",
+                                    image = Icons.Outlined.Info,
+                                    instructions = uiState.prescription!!.summary.stepsToCure
                                 )
                             }
                         }
@@ -338,6 +373,28 @@ fun PrescriptionDetailsScreen(
             }
         )
     }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Delete Prescription") },
+            text = { Text("Are you sure you want to delete this prescription? This action cannot be undone.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDeleteDialog = false
+                    deleteTriggered = true
+                    navController.popBackStack()
+                }) {
+                    Text("Yes, Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 }
 
 @Composable
@@ -502,11 +559,12 @@ private fun MedicationItem(
 @Composable
 private fun InstructionsCard(
     title: String,
-    instructions: List<String>,
-    modifier: Modifier = Modifier
+    image: ImageVector? = null,
+    instructions: List<String>
 ) {
+    var showTooltip by remember { mutableStateOf(false) }
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
@@ -514,11 +572,28 @@ private fun InstructionsCard(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterHorizontally),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+
+                if (image != null) {
+                    Image(
+                        modifier = Modifier
+                            .size(16.dp)
+                            .clickable { showTooltip = true },
+                        imageVector = image,
+                        contentDescription = "Info CTA"
+                    )
+                }
+            }
+            
             Spacer(modifier = Modifier.height(8.dp))
             instructions.forEach { instruction ->
                 Text(
@@ -528,6 +603,20 @@ private fun InstructionsCard(
                 )
             }
         }
+    }
+    if (showTooltip) {
+        AlertDialog(
+            onDismissRequest = { showTooltip = false },
+            title = { Text("Note") },
+            text = {
+                Text("These steps are generated by AI and intended for informational purposes only. Please consult a qualified medical professional for accurate diagnosis and treatment.")
+            },
+            confirmButton = {
+                TextButton(onClick = { showTooltip = false }) {
+                    Text("OK")
+                }
+            }
+        )
     }
 }
 

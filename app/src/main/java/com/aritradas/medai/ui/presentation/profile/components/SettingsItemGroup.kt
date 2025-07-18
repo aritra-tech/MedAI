@@ -21,7 +21,7 @@ fun SettingsItemGroup(
         modifier = modifier
             .widthIn(max = 500.dp)
             .clip(RoundedCornerShape(10.dp))
-            .background(MaterialTheme.colorScheme.surfaceBright),
+            .background(color = MaterialTheme.colorScheme.surfaceVariant),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         columnScope()

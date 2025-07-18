@@ -30,6 +30,8 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -494,6 +496,27 @@ fun PrescriptionSummarizeScreen(
                             }
                         }
 
+                        if (summary.stepsToCure.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = "Steps to Get Cured:",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Column {
+                                summary.stepsToCure.forEach { step ->
+                                    Text(
+                                        text = "• $step",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.padding(bottom = 4.dp)
+                                    )
+                                }
+                            }
+                        }
+
                         if (summary.warnings.isNotEmpty()) {
                             Spacer(modifier = Modifier.height(16.dp))
                             Card(
@@ -518,6 +541,29 @@ fun PrescriptionSummarizeScreen(
                                         )
                                     }
                                 }
+                            }
+                        }
+
+                        if (summary.prescriptionReason.isNotEmpty()) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.Start
+                            ) {
+                                AssistChip(
+                                    modifier = Modifier.padding(vertical = 8.dp),
+                                    onClick = {},
+                                    label = {
+                                        Text(
+                                            text = summary.prescriptionReason,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    },
+                                    shape = RoundedCornerShape(50),
+                                    colors = AssistChipDefaults.assistChipColors(
+                                        containerColor = MaterialTheme.colorScheme.surface
+                                    )
+                                )
                             }
                         }
                     }
