@@ -45,6 +45,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
@@ -79,6 +80,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.aritradas.medai.R
+import com.aritradas.medai.domain.model.DrugResult
 import com.aritradas.medai.domain.model.Medication
 import java.io.File
 import java.text.SimpleDateFormat
@@ -104,6 +106,10 @@ fun PrescriptionSummarizeScreen(
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     var cameraUri by remember { mutableStateOf<Uri?>(null) }
     var showBackWarningDialog by remember { mutableStateOf(false) }
+    var showDrugDetailModal by remember { mutableStateOf(false) }
+    val drugDetail by prescriptionViewModel.drugDetail.collectAsState()
+    val isDrugLoading by prescriptionViewModel.isDrugLoading.collectAsState()
+    val drugDetailError by prescriptionViewModel.drugDetailError.collectAsState()
 
     val createImageFile = {
         val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
@@ -209,6 +215,34 @@ fun PrescriptionSummarizeScreen(
             navController.popBackStack()
         }
         Unit
+    }
+
+    if (showDrugDetailModal) {
+        ModalBottomSheet(
+            onDismissRequest = {
+                showDrugDetailModal = false
+            }
+        ) {
+            when {
+                isDrugLoading -> {
+                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                }
+
+                drugDetail != null -> {
+                    DrugDetailSheetContent(detail = drugDetail!!)
+                }
+
+                drugDetailError != null -> {
+                    Text(
+                        text = drugDetailError ?: "No data.",
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(24.dp)
+                    )
+                }
+            }
+        }
     }
 
     Scaffold(
@@ -491,7 +525,15 @@ fun PrescriptionSummarizeScreen(
                             Spacer(modifier = Modifier.height(8.dp))
 
                             summary.medications.forEach { medication ->
-                                MedicationCard(medication = medication)
+                                MedicationCard(
+                                    medication = medication,
+                                    onClick = {
+                                        prescriptionViewModel.fetchDrugDetailByGenericName(
+                                            medication.name
+                                        )
+                                        showDrugDetailModal = true
+                                    }
+                                )
                                 Spacer(modifier = Modifier.height(8.dp))
                             }
                         }
@@ -833,8 +875,49 @@ fun PrescriptionSummarizeScreen(
 }
 
 @Composable
-private fun MedicationCard(medication: Medication) {
+fun DrugDetailSheetContent(detail: DrugResult) {
+    Column(Modifier.padding(24.dp)) {
+
+        Text(
+            text = detail.openfda?.brand_name?.firstOrNull()
+                ?: detail.openfda?.generic_name?.firstOrNull() ?: "Medicine Info",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold
+        )
+        Spacer(Modifier.height(12.dp))
+
+        detail.purpose?.firstOrNull()?.let {
+            Text("Purpose: $it", style = MaterialTheme.typography.bodyMedium)
+        }
+
+        detail.active_ingredient?.firstOrNull()?.let {
+            Text("Active Ingredient: $it", style = MaterialTheme.typography.bodyMedium)
+        }
+
+        detail.dosage_and_administration?.firstOrNull()?.let {
+            Text("Dosage: $it", style = MaterialTheme.typography.bodyMedium)
+        }
+
+        detail.warnings?.firstOrNull()?.let {
+            Spacer(Modifier.height(8.dp))
+            Text(
+                "Warnings:",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.error
+            )
+            Text(it, style = MaterialTheme.typography.bodySmall)
+        }
+    }
+}
+
+@Composable
+private fun MedicationCard(
+    medication: Medication,
+    onClick: () -> Unit
+) {
     Card(
+        modifier = Modifier
+            .clickable { onClick() },
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
