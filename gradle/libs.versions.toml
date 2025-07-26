@@ -16,9 +16,9 @@ junitVersion = "1.2.1"
 espressoCore = "3.6.1"
 lifecycleRuntimeKtx = "2.9.0"
 activityCompose = "1.10.1"
-composeBom = "2025.06.00"
+composeBom = "2025.07.00"
 navigationCompose = "2.9.0"
-hiltAndroidCompiler = "2.50"
+hiltAndroidCompiler = "2.57"
 hiltWork = "1.2.0"
 firebaseAuth = "23.2.1"
 credentials = "1.5.0"
@@ -32,6 +32,9 @@ firebaseFirestore = "25.1.4"
 firebaseCrashlytics = "19.4.4"
 googleFirebaseCrashlytics = "3.0.3"
 firebaseMessaging = "24.1.1"
+lifecycleViewmodelKtx = "2.9.2"
+converterGson = "3.0.0"
+retrofit = "3.0.0"
 
 [libraries]
 androidx-biometric = { module = "androidx.biometric:biometric", version.ref = "biometric" }
@@ -76,6 +79,10 @@ firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashly
 firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging", version.ref = "firebaseMessaging" }
 app-update = { module = "com.google.android.play:app-update", version.ref = "appUpdate" }
 app-update-ktx = { module = "com.google.android.play:app-update-ktx", version.ref = "appUpdate" }
+retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
+converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
+androidx-lifecycle-livedata-ktx = { module = "androidx.lifecycle:lifecycle-livedata-ktx", version.ref = "lifecycleViewmodelKtx" }
+androidx-lifecycle-viewmodel-ktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "lifecycleViewmodelKtx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
