@@ -8,8 +8,10 @@ import androidx.datastore.preferences.preferencesDataStoreFile
 import com.aritradas.medai.R
 import com.aritradas.medai.data.datastore.DataStoreUtil
 import com.aritradas.medai.data.repository.AuthRepositoryImpl
+import com.aritradas.medai.data.repository.MedicineDetailsRepositoryImpl
 import com.aritradas.medai.data.repository.PrescriptionRepositoryImpl
 import com.aritradas.medai.domain.repository.AuthRepository
+import com.aritradas.medai.domain.repository.MedicineDetailsRepository
 import com.aritradas.medai.domain.repository.PrescriptionRepository
 import com.aritradas.medai.utils.AppBioMetricManager
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -58,6 +60,12 @@ object AppModule {
     fun providePrescriptionRepository(
         prescriptionRepositoryImpl: PrescriptionRepositoryImpl
     ): PrescriptionRepository = prescriptionRepositoryImpl
+
+    @Provides
+    @Singleton
+    fun providesMedicineDetailsRepository(
+        medicineDetailsRepositoryImpl: MedicineDetailsRepositoryImpl
+    ): MedicineDetailsRepository = medicineDetailsRepositoryImpl
 
     @Provides
     fun provideDataStoreUtil(@ApplicationContext context: Context): DataStoreUtil =
