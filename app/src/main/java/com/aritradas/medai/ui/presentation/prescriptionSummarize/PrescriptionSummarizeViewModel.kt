@@ -4,7 +4,9 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.aritradas.medai.domain.model.DrugResult
 import com.aritradas.medai.domain.model.SavedPrescription
+import com.aritradas.medai.domain.repository.MedicineDetailsRepository
 import com.aritradas.medai.domain.repository.PrescriptionRepository
 import com.aritradas.medai.ui.presentation.prescriptionSummarize.state.PrescriptionUiState
 import com.aritradas.medai.utils.ImageValidator
@@ -24,11 +26,21 @@ import javax.inject.Inject
 @HiltViewModel
 class PrescriptionSummarizeViewModel @Inject constructor(
     private val prescriptionRepository: PrescriptionRepository,
+    private val medicineDetailsRepository: MedicineDetailsRepository,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PrescriptionUiState())
     val uiState: StateFlow<PrescriptionUiState> = _uiState.asStateFlow()
+
+    private val _drugDetail = MutableStateFlow<DrugResult?>(null)
+    val drugDetail = _drugDetail.asStateFlow()
+
+    private val _isDrugLoading = MutableStateFlow(false)
+    val isDrugLoading = _isDrugLoading.asStateFlow()
+
+    private val _drugDetailError = MutableStateFlow<String?>(null)
+    val drugDetailError = _drugDetailError.asStateFlow()
 
     private var onSaveSuccess: (() -> Unit)? = null
 
@@ -249,6 +261,21 @@ class PrescriptionSummarizeViewModel @Inject constructor(
                     // Handle loading if needed
                 }
             }
+        }
+    }
+
+    fun fetchDrugDetailByGenericName(medicineName: String) {
+        viewModelScope.launch {
+            _isDrugLoading.value = true
+            _drugDetailError.value = null
+            val result = medicineDetailsRepository.getDrugInfo(medicineName)
+            if (result != null) {
+                _drugDetail.value = result
+            } else {
+                _drugDetail.value = null
+                _drugDetailError.value = "No information found for $medicineName."
+            }
+            _isDrugLoading.value = false
         }
     }
 }
