@@ -27,6 +27,7 @@ android {
 
         // Add BuildConfig field for Gemini API key
         buildConfigField("String", "GEMINI_API_KEY", "\"${project.findProperty("GEMINI_API_KEY") ?: ""}\"")
+        buildConfigField("String", "API_KEY", "\"${project.findProperty("API_KEY") ?: ""}\"")
     }
 
     buildTypes {
@@ -123,6 +124,12 @@ dependencies {
     // In-App Update
     implementation(libs.app.update)
     implementation(libs.app.update.ktx)
+
+    implementation (libs.retrofit)
+    implementation (libs.converter.gson)
+    implementation (libs.androidx.lifecycle.viewmodel.ktx)
+    implementation (libs.androidx.lifecycle.livedata.ktx)
+
 
     //Test
     testImplementation(libs.junit)

@@ -35,6 +35,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
@@ -57,6 +58,9 @@ import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.aritradas.medai.domain.model.Medication
+import com.aritradas.medai.ui.presentation.prescription.PrescriptionViewModel
+import com.aritradas.medai.ui.presentation.prescriptionSummarize.DrugDetailSheetContent
+import com.aritradas.medai.ui.presentation.prescriptionSummarize.PrescriptionSummarizeViewModel
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -66,7 +70,8 @@ fun PrescriptionDetailsScreen(
     navController: NavController,
     prescriptionId: String,
     modifier: Modifier = Modifier,
-    viewModel: PrescriptionDetailsViewModel = hiltViewModel()
+    viewModel: PrescriptionDetailsViewModel = hiltViewModel(),
+    prescriptionViewModel: PrescriptionSummarizeViewModel = hiltViewModel()
 ) {
     val context = navController.context
     val uiState by viewModel.uiState.collectAsState()
@@ -76,6 +81,11 @@ fun PrescriptionDetailsScreen(
     var showDeleteDialog by remember { mutableStateOf(false) }
     var deleteTriggered by remember { mutableStateOf(false) }
     val handleReport = { showReportTypeDialog = true }
+    var showDrugDetailModal by remember { mutableStateOf(false) }
+    val onShowDrugDetailModal: (Boolean) -> Unit = { showDrugDetailModal = it }
+    val drugDetail by prescriptionViewModel.drugDetail.collectAsState()
+    val isDrugLoading by prescriptionViewModel.isDrugLoading.collectAsState()
+    val drugDetailError by prescriptionViewModel.drugDetailError.collectAsState()
     val handleReportSubmit = {
         if (reportReason.isNotBlank()) {
             showReportDialog = false
@@ -98,6 +108,43 @@ fun PrescriptionDetailsScreen(
 
     LaunchedEffect(prescriptionId) {
         viewModel.loadPrescription(prescriptionId)
+    }
+
+    if (showDrugDetailModal) {
+        ModalBottomSheet(
+            onDismissRequest = {
+                showDrugDetailModal = false
+            }
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+            ) {
+                when {
+                    isDrugLoading -> {
+                        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                            LoadingIndicator(
+                                modifier = Modifier
+                                    .size(20.dp)
+                                    .align(Alignment.Center)
+                            )
+                        }
+                    }
+
+                    drugDetail != null -> {
+                        DrugDetailSheetContent(detail = drugDetail!!)
+                    }
+
+                    drugDetailError != null -> {
+                        Text(
+                            text = drugDetailError ?: "No data.",
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.padding(24.dp)
+                        )
+                    }
+                }
+            }
+        }
     }
 
     Scaffold(
@@ -161,7 +208,11 @@ fun PrescriptionDetailsScreen(
                         }
 
                         item {
-                            MedicationsCard(medications = uiState.prescription!!.summary.medications)
+                            MedicationsCard(
+                                medications = uiState.prescription!!.summary.medications,
+                                viewModel = prescriptionViewModel,
+                                onShowDrugDetailModal = onShowDrugDetailModal
+                            )
                         }
 
                         if (uiState.prescription!!.summary.dosageInstructions.isNotEmpty()) {
@@ -481,6 +532,8 @@ private fun SummaryCard(
 @Composable
 private fun MedicationsCard(
     medications: List<Medication>,
+    viewModel: PrescriptionSummarizeViewModel,
+    onShowDrugDetailModal: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -511,7 +564,15 @@ private fun MedicationsCard(
             Spacer(modifier = Modifier.height(12.dp))
 
             medications.forEach { medication ->
-                MedicationItem(medication = medication)
+                MedicationItem(
+                    medication = medication,
+                    onClick = {
+                        viewModel.fetchDrugDetailByGenericName(
+                            medication.name
+                        )
+                        onShowDrugDetailModal(true)
+                    }
+                )
                 Spacer(modifier = Modifier.height(8.dp))
             }
         }
@@ -521,10 +582,12 @@ private fun MedicationsCard(
 @Composable
 private fun MedicationItem(
     medication: Medication,
+    onClick:() -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth()
+            .clickable { onClick() },
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         )

@@ -4,7 +4,9 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.aritradas.medai.domain.model.DrugResult
 import com.aritradas.medai.domain.model.SavedPrescription
+import com.aritradas.medai.domain.repository.MedicineDetailsRepository
 import com.aritradas.medai.domain.repository.PrescriptionRepository
 import com.aritradas.medai.ui.presentation.prescriptionSummarize.state.PrescriptionUiState
 import com.aritradas.medai.utils.ImageValidator
@@ -16,6 +18,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -24,11 +27,21 @@ import javax.inject.Inject
 @HiltViewModel
 class PrescriptionSummarizeViewModel @Inject constructor(
     private val prescriptionRepository: PrescriptionRepository,
+    private val medicineDetailsRepository: MedicineDetailsRepository,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PrescriptionUiState())
     val uiState: StateFlow<PrescriptionUiState> = _uiState.asStateFlow()
+
+    private val _drugDetail = MutableStateFlow<DrugResult?>(null)
+    val drugDetail = _drugDetail.asStateFlow()
+
+    private val _isDrugLoading = MutableStateFlow(false)
+    val isDrugLoading = _isDrugLoading.asStateFlow()
+
+    private val _drugDetailError = MutableStateFlow<String?>(null)
+    val drugDetailError = _drugDetailError.asStateFlow()
 
     private var onSaveSuccess: (() -> Unit)? = null
 
@@ -248,6 +261,28 @@ class PrescriptionSummarizeViewModel @Inject constructor(
                 is Resource.Loading -> {
                     // Handle loading if needed
                 }
+            }
+        }
+    }
+
+    fun fetchDrugDetailByGenericName(medicineName: String) {
+        viewModelScope.launch {
+            _isDrugLoading.value = true
+            _drugDetailError.value = null
+            _drugDetail.value = null
+
+            try {
+                val result = medicineDetailsRepository.getDrugInfo(medicineName.trim())
+                if (result != null) {
+                    _drugDetail.value = result
+                } else {
+                    _drugDetailError.value = "Unable to fetch information for '$medicineName'. Please check the medicine name or consult a healthcare professional."
+                }
+            } catch (e: Exception) {
+                _drugDetailError.value = "Failed to fetch medicine details. Please check your internet connection and try again."
+                _drugDetail.value = null
+            } finally {
+                _isDrugLoading.value = false
             }
         }
     }
