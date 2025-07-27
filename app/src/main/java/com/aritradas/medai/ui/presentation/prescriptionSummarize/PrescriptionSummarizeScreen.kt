@@ -529,7 +529,7 @@ fun PrescriptionSummarizeScreen(
                                     medication = medication,
                                     onClick = {
                                         prescriptionViewModel.fetchDrugDetailByGenericName(
-                                            medication.name
+                                            medication.name.lowercase()
                                         )
                                         showDrugDetailModal = true
                                     }
