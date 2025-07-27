@@ -1,6 +1,5 @@
 package com.aritradas.medai.data.repository
 
-import android.content.Context
 import com.aritradas.medai.BuildConfig
 import com.aritradas.medai.domain.model.DrugResult
 import com.aritradas.medai.domain.model.GeminiMedicineResponse
@@ -9,16 +8,13 @@ import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.content
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class MedicineDetailsRepositoryImpl @Inject constructor(
-    @ApplicationContext private val context: Context
-) : MedicineDetailsRepository {
+class MedicineDetailsRepositoryImpl @Inject constructor() : MedicineDetailsRepository {
 
     private val generativeModel = GenerativeModel(
         modelName = "gemini-2.5-pro",
@@ -30,28 +26,37 @@ class MedicineDetailsRepositoryImpl @Inject constructor(
     override suspend fun getDrugInfo(genericName: String): DrugResult? = withContext(Dispatchers.IO) {
         try {
             val prompt = """
-                Provide detailed information about the medicine: "$genericName"
-                
-                Please respond ONLY with valid JSON in exactly this format (no additional text or markdown):
-                
+                Provide information about the medicine: "$genericName"
+
+                Please respond ONLY with valid JSON in exactly this format (no extra text or markdown):
+
                 {
-                    "uses": "Detailed description of what this medicine is used for, including the medical conditions it treats. Be specific about the primary indications and therapeutic uses.",
-                    "howItWorks": "Clear explanation of how this medicine works in the body (mechanism of action). Explain in simple terms how it achieves its therapeutic effect.",
-                    "benefits": "Key therapeutic benefits and positive effects of this medicine. Include what patients can expect when taking this medication.",
-                    "sideEffects": "Common and important side effects that patients should be aware of. Include both mild and serious side effects, and mention when to contact a doctor."
+                  "uses": [
+                    "Short point describing a common use or condition this medicine treats",
+                    "Another point, if applicable"
+                  ],
+                  "howItWorks": [
+                    "Short, simple explanation of how this medicine works in the body"
+                  ],
+                  "benefits": [
+                    "Point summarizing one key benefit",
+                    "Another point, if needed"
+                  ],
+                  "sideEffects": [
+                    "Common side effect (e.g., headache, nausea)",
+                    "Serious side effect (e.g., chest pain) – when to call a doctor"
+                  ]
                 }
-                
-                Important guidelines:
-                - Provide accurate, medically sound information
-                - Focus on medicines commonly available in India and internationally
-                - Include both brand names and generic equivalents if relevant
-                - Keep explanations clear and understandable for patients
-                - If this is a combination medicine, explain each component briefly
-                - If the medicine name seems incorrect or unclear, provide the best possible information based on similar medicines
-                - Be comprehensive but concise in each section
-                - Use professional medical language but keep it patient-friendly
-                
-                Medicine to analyze: $genericName
+
+                Important:
+                - Use simple, everyday language that anyone can understand.
+                - Keep each bullet short and focused (1 sentence max).
+                - Focus on common uses and effects in India and worldwide.
+                - Mention common brand and generic names if useful.
+                - If the medicine is a combination, briefly explain each ingredient.
+                - If the name is unclear or partially wrong, give best-guess info based on similar medicines.
+                - Be brief, clear, and helpful.
+                - Do NOT include any extra text outside the JSON.
             """.trimIndent()
 
             val inputContent = content {
@@ -64,8 +69,7 @@ class MedicineDetailsRepositoryImpl @Inject constructor(
             parseGeminiMedicineResponse(responseText, genericName)
 
         } catch (e: Exception) {
-            // Return null if request fails
-            null
+            null // Gracefully handle failures
         }
     }
 
@@ -87,7 +91,6 @@ class MedicineDetailsRepositoryImpl @Inject constructor(
             )
 
         } catch (e: JsonSyntaxException) {
-            // Fallback parsing if JSON is malformed
             parseFallbackMedicineResponse(responseText, medicineName)
         } catch (e: Exception) {
             null
@@ -96,39 +99,37 @@ class MedicineDetailsRepositoryImpl @Inject constructor(
 
     private fun parseFallbackMedicineResponse(responseText: String, medicineName: String): DrugResult? {
         return try {
-            // Simple fallback parsing - extract information from plain text
             val sections = responseText.split("\n").filter { it.isNotBlank() }
 
-            var uses = "Information not available"
-            var howItWorks = "Information not available"
-            var benefits = "Information not available"
-            var sideEffects = "Information not available"
+            var uses = listOf("Information not available")
+            var howItWorks = listOf("Information not available")
+            var benefits = listOf("Information not available")
+            var sideEffects = listOf("Information not available")
 
-            // Try to extract information from plain text
             sections.forEach { line ->
                 val lowerLine = line.lowercase()
                 when {
                     lowerLine.contains("use") && lowerLine.contains(":") -> {
-                        uses = line.substringAfter(":").trim()
+                        uses = line.substringAfter(":").split(Regex("[.•]")).map { it.trim() }.filter { it.isNotEmpty() }
                     }
                     lowerLine.contains("work") && lowerLine.contains(":") -> {
-                        howItWorks = line.substringAfter(":").trim()
+                        howItWorks = line.substringAfter(":").split(Regex("[.•]")).map { it.trim() }.filter { it.isNotEmpty() }
                     }
                     lowerLine.contains("benefit") && lowerLine.contains(":") -> {
-                        benefits = line.substringAfter(":").trim()
+                        benefits = line.substringAfter(":").split(Regex("[.•]")).map { it.trim() }.filter { it.isNotEmpty() }
                     }
                     lowerLine.contains("side effect") && lowerLine.contains(":") -> {
-                        sideEffects = line.substringAfter(":").trim()
+                        sideEffects = line.substringAfter(":").split(Regex("[.•]")).map { it.trim() }.filter { it.isNotEmpty() }
                     }
                 }
             }
 
             DrugResult(
                 medicineName = medicineName,
-                uses = uses,
-                howItWorks = howItWorks,
-                benefits = benefits,
-                sideEffects = sideEffects
+                uses = if (uses.isNotEmpty()) uses else listOf("Information not available"),
+                howItWorks = if (howItWorks.isNotEmpty()) howItWorks else listOf("Information not available"),
+                benefits = if (benefits.isNotEmpty()) benefits else listOf("Information not available"),
+                sideEffects = if (sideEffects.isNotEmpty()) sideEffects else listOf("Information not available")
             )
         } catch (e: Exception) {
             null

@@ -232,14 +232,15 @@ fun PrescriptionSummarizeScreen(
         ) {
             Box(
                 modifier = Modifier
-                    .height(800.dp)
                     .fillMaxWidth()
             ) {
                 when {
                     isDrugLoading -> {
                         Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                             LoadingIndicator(
-                                modifier = Modifier.size(20.dp).align(Alignment.Center)
+                                modifier = Modifier
+                                    .size(20.dp)
+                                    .align(Alignment.Center)
                             )
                         }
                     }
@@ -893,7 +894,7 @@ fun PrescriptionSummarizeScreen(
 fun DrugDetailSheetContent(detail: DrugResult) {
     Column(
         modifier = Modifier
-            .padding(24.dp)
+            .padding(16.dp)
             .verticalScroll(rememberScrollState())
     ) {
         // Medicine name
@@ -904,7 +905,7 @@ fun DrugDetailSheetContent(detail: DrugResult) {
             color = MaterialTheme.colorScheme.primary
         )
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         // Uses section
         DrugDetailSection(
@@ -937,7 +938,7 @@ fun DrugDetailSheetContent(detail: DrugResult) {
 @Composable
 private fun DrugDetailSection(
     title: String,
-    content: String,
+    content: List<String>,
     icon: ImageVector,
     isWarning: Boolean = false
 ) {
@@ -983,13 +984,14 @@ private fun DrugDetailSection(
                 }
             )
         ) {
-            Text(
-                text = content,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                lineHeight = 20.sp,
-                modifier = Modifier.padding(16.dp)
-            )
+            content.forEach { item ->
+                Text(
+                    modifier = Modifier.padding(8.dp),
+                    text = "• $item",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }

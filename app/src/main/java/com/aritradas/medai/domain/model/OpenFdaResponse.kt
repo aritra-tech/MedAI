@@ -4,21 +4,21 @@ data class OpenFdaResponse(
     val results: List<DrugResult>? = null
 )
 
-data class DrugResult(
-    val medicineName: String,
-    val uses: String,
-    val howItWorks: String,
-    val benefits: String,
-    val sideEffects: String
+data class GeminiMedicineResponse(
+    val uses: List<String>,
+    val howItWorks: List<String>,
+    val benefits: List<String>,
+    val sideEffects: List<String>
 )
 
-// Gemini response model
-data class GeminiMedicineResponse(
-    val uses: String,
-    val howItWorks: String,
-    val benefits: String,
-    val sideEffects: String
+data class DrugResult(
+    val medicineName: String,
+    val uses: List<String>,
+    val howItWorks: List<String>,
+    val benefits: List<String>,
+    val sideEffects: List<String>
 )
+
 
 data class OpenFdaInfo(
     val brand_name: List<String>? = null,
