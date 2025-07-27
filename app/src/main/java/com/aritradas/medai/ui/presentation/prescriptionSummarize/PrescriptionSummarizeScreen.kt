@@ -26,9 +26,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Flag
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.MedicalServices
 import androidx.compose.material.icons.filled.Photo
+import androidx.compose.material.icons.filled.Psychology
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
@@ -66,6 +71,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -74,6 +80,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -223,23 +230,31 @@ fun PrescriptionSummarizeScreen(
                 showDrugDetailModal = false
             }
         ) {
-            when {
-                isDrugLoading -> {
-                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
+            Box(
+                modifier = Modifier
+                    .height(800.dp)
+                    .fillMaxWidth()
+            ) {
+                when {
+                    isDrugLoading -> {
+                        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                            LoadingIndicator(
+                                modifier = Modifier.size(20.dp).align(Alignment.Center)
+                            )
+                        }
                     }
-                }
 
-                drugDetail != null -> {
-                    DrugDetailSheetContent(detail = drugDetail!!)
-                }
+                    drugDetail != null -> {
+                        DrugDetailSheetContent(detail = drugDetail!!)
+                    }
 
-                drugDetailError != null -> {
-                    Text(
-                        text = drugDetailError ?: "No data.",
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.padding(24.dp)
-                    )
+                    drugDetailError != null -> {
+                        Text(
+                            text = drugDetailError ?: "No data.",
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.padding(24.dp)
+                        )
+                    }
                 }
             }
         }
@@ -529,7 +544,7 @@ fun PrescriptionSummarizeScreen(
                                     medication = medication,
                                     onClick = {
                                         prescriptionViewModel.fetchDrugDetailByGenericName(
-                                            medication.name.lowercase()
+                                            medication.name
                                         )
                                         showDrugDetailModal = true
                                     }
@@ -568,7 +583,7 @@ fun PrescriptionSummarizeScreen(
                             ) {
                                 Column(modifier = Modifier.padding(12.dp)) {
                                     Text(
-                                        text = "⚠️ Important Warnings:",
+                                        text = "Important Points:",
                                         style = MaterialTheme.typography.titleSmall,
                                         fontWeight = FontWeight.SemiBold,
                                         color = MaterialTheme.colorScheme.onErrorContainer
@@ -876,36 +891,105 @@ fun PrescriptionSummarizeScreen(
 
 @Composable
 fun DrugDetailSheetContent(detail: DrugResult) {
-    Column(Modifier.padding(24.dp)) {
-
+    Column(
+        modifier = Modifier
+            .padding(24.dp)
+            .verticalScroll(rememberScrollState())
+    ) {
+        // Medicine name
         Text(
-            text = detail.openfda?.brand_name?.firstOrNull()
-                ?: detail.openfda?.generic_name?.firstOrNull() ?: "Medicine Info",
+            text = detail.medicineName.replaceFirstChar { it.uppercase() },
             style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary
         )
-        Spacer(Modifier.height(12.dp))
 
-        detail.purpose?.firstOrNull()?.let {
-            Text("Purpose: $it", style = MaterialTheme.typography.bodyMedium)
-        }
+        Spacer(modifier = Modifier.height(10.dp))
 
-        detail.active_ingredient?.firstOrNull()?.let {
-            Text("Active Ingredient: $it", style = MaterialTheme.typography.bodyMedium)
-        }
+        // Uses section
+        DrugDetailSection(
+            title = "Uses",
+            content = detail.uses,
+            icon = Icons.Default.MedicalServices
+        )
 
-        detail.dosage_and_administration?.firstOrNull()?.let {
-            Text("Dosage: $it", style = MaterialTheme.typography.bodyMedium)
-        }
+        Spacer(modifier = Modifier.height(10.dp))
 
-        detail.warnings?.firstOrNull()?.let {
-            Spacer(Modifier.height(8.dp))
-            Text(
-                "Warnings:",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.error
+        // Benefits section
+        DrugDetailSection(
+            title = "Benefits",
+            content = detail.benefits,
+            icon = Icons.Default.CheckCircle
+        )
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // Side effects section
+        DrugDetailSection(
+            title = "Side Effects",
+            content = detail.sideEffects,
+            icon = Icons.Default.Warning,
+            isWarning = true
+        )
+    }
+}
+
+@Composable
+private fun DrugDetailSection(
+    title: String,
+    content: String,
+    icon: ImageVector,
+    isWarning: Boolean = false
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = if (isWarning) {
+                    MaterialTheme.colorScheme.error
+                } else {
+                    MaterialTheme.colorScheme.primary
+                },
+                modifier = Modifier.size(20.dp)
             )
-            Text(it, style = MaterialTheme.typography.bodySmall)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = if (isWarning) {
+                    MaterialTheme.colorScheme.error
+                } else {
+                    MaterialTheme.colorScheme.onSurface
+                }
+            )
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = if (isWarning) {
+                    MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.1f)
+                } else {
+                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                }
+            )
+        ) {
+            Text(
+                text = content,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                lineHeight = 20.sp,
+                modifier = Modifier.padding(16.dp)
+            )
         }
     }
 }

@@ -6,9 +6,9 @@ import retrofit2.http.GET
 import retrofit2.http.Query
 
 interface MedAIService {
-    @GET("label.json")
-    suspend fun getDrugDetails(
-        @Query("search") search: String
-    ): Response<OpenFdaResponse>
+//    @GET("label.json")
+//    suspend fun getDrugDetails(
+//        @Query("search") search: String
+//    ): Response<OpenFdaResponse>
 }
 

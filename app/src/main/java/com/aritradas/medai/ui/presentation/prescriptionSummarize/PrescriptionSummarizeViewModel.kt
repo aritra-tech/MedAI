@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -268,14 +269,21 @@ class PrescriptionSummarizeViewModel @Inject constructor(
         viewModelScope.launch {
             _isDrugLoading.value = true
             _drugDetailError.value = null
-            val result = medicineDetailsRepository.getDrugInfo(medicineName)
-            if (result != null) {
-                _drugDetail.value = result
-            } else {
+            _drugDetail.value = null
+
+            try {
+                val result = medicineDetailsRepository.getDrugInfo(medicineName.trim())
+                if (result != null) {
+                    _drugDetail.value = result
+                } else {
+                    _drugDetailError.value = "Unable to fetch information for '$medicineName'. Please check the medicine name or consult a healthcare professional."
+                }
+            } catch (e: Exception) {
+                _drugDetailError.value = "Failed to fetch medicine details. Please check your internet connection and try again."
                 _drugDetail.value = null
-                _drugDetailError.value = "No information found for $medicineName."
+            } finally {
+                _isDrugLoading.value = false
             }
-            _isDrugLoading.value = false
         }
     }
 }

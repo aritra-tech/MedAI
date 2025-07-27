@@ -5,12 +5,19 @@ data class OpenFdaResponse(
 )
 
 data class DrugResult(
-    val active_ingredient: List<String>? = null,
-    val purpose: List<String>? = null,
-    val indications_and_usage: List<String>? = null,
-    val warnings: List<String>? = null,
-    val dosage_and_administration: List<String>? = null,
-    val openfda: OpenFdaInfo? = null
+    val medicineName: String,
+    val uses: String,
+    val howItWorks: String,
+    val benefits: String,
+    val sideEffects: String
+)
+
+// Gemini response model
+data class GeminiMedicineResponse(
+    val uses: String,
+    val howItWorks: String,
+    val benefits: String,
+    val sideEffects: String
 )
 
 data class OpenFdaInfo(
