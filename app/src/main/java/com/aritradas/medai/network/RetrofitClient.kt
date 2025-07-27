@@ -1,5 +1,6 @@
 package com.aritradas.medai.network
 
+import com.aritradas.medai.BuildConfig
 import kotlin.jvm.java
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
@@ -8,7 +9,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitClient {
     private const val BASE_URL = "https://api.fda.gov/drug/"
-    private const val API_KEY = "lVy7UeFHpBafR3DfRvlNheJUhR8ohgEaKLiwejZT"
+    private const val API_KEY = BuildConfig.API_KEY
 
     private val client = OkHttpClient.Builder()
         .addInterceptor(Interceptor { chain ->
