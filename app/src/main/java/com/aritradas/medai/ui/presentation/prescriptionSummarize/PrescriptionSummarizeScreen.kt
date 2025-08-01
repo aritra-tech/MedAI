@@ -13,11 +13,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,10 +31,8 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Flag
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MedicalServices
 import androidx.compose.material.icons.filled.Photo
-import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
@@ -47,7 +47,6 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -56,6 +55,7 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -80,7 +80,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -165,14 +164,12 @@ fun PrescriptionSummarizeScreen(
             )
         )
         showDialog = false
-        Unit
     }
 
     val handleRemoveImage = {
         imageUri = null
         cameraUri = null
         prescriptionViewModel.clearSummary()
-        Unit
     }
 
     val handleSummarize = {
@@ -264,9 +261,10 @@ fun PrescriptionSummarizeScreen(
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
+            .systemBarsPadding()
             .nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            LargeTopAppBar(
+            TopAppBar(
                 title = {
                     Text(
                         text = "Scan Prescription",
@@ -311,15 +309,16 @@ fun PrescriptionSummarizeScreen(
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background,
                     scrolledContainerColor = MaterialTheme.colorScheme.background
-                )
+                ),
+                windowInsets = WindowInsets(0)
             )
         }
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
                 .padding(horizontal = 16.dp)
+                .padding(paddingValues)
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {

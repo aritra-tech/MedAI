@@ -5,6 +5,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.LaunchedEffect
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.core.view.WindowCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModelProvider
 import com.aritradas.medai.navigation.Navigation
@@ -31,6 +32,8 @@ class MainActivity : FragmentActivity() {
         val splashScreen = installSplashScreen()
 
         super.onCreate(savedInstanceState)
+
+        WindowCompat.setDecorFitsSystemWindows(window, false)
 
         splashViewModel = ViewModelProvider(this)[SplashViewModel::class.java]
 

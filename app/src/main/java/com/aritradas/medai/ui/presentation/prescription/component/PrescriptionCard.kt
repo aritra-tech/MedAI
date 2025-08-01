@@ -7,7 +7,6 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,7 +17,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -70,29 +68,13 @@ fun PrescriptionCard(
                 overflow = TextOverflow.Ellipsis
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             if (prescription.summary.prescriptionReason.isNotEmpty()) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Start
-                ) {
-                    AssistChip(
-                        modifier = Modifier.padding(vertical = 8.dp),
-                        onClick = {},
-                        label = {
-                            Text(
-                                text = prescription.summary.prescriptionReason,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        },
-                        shape = RoundedCornerShape(50),
-                        colors = AssistChipDefaults.assistChipColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer
-                        )
-                    )
-                }
+                AssistChip(
+                    onClick = {},
+                    label = { Text(text = prescription.summary.prescriptionReason) }
+                )
             }
         }
     }
