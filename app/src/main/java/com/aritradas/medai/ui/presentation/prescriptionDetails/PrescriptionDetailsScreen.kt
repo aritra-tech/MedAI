@@ -58,11 +58,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.aritradas.medai.domain.model.Medication
-import com.aritradas.medai.ui.presentation.prescription.PrescriptionViewModel
 import com.aritradas.medai.ui.presentation.prescriptionSummarize.DrugDetailSheetContent
 import com.aritradas.medai.ui.presentation.prescriptionSummarize.PrescriptionSummarizeViewModel
-import java.text.SimpleDateFormat
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -194,12 +191,7 @@ fun PrescriptionDetailsScreen(
                         item {
                             PrescriptionHeaderCard(
                                 title = uiState.prescription!!.title,
-                                doctorName = uiState.prescription!!.summary.doctorName,
-                                savedAt = SimpleDateFormat(
-                                    "MMM dd, yyyy 'at' hh:mm a",
-                                    Locale.getDefault()
-                                )
-                                    .format(uiState.prescription!!.savedAt)
+                                doctorName = uiState.prescription!!.summary.doctorName
                             )
                         }
 
@@ -434,9 +426,8 @@ fun PrescriptionDetailsScreen(
                 TextButton(onClick = {
                     showDeleteDialog = false
                     deleteTriggered = true
-                    navController.popBackStack()
                 }) {
-                    Text("Yes, Delete")
+                    Text("Okay")
                 }
             },
             dismissButton = {
@@ -452,7 +443,6 @@ fun PrescriptionDetailsScreen(
 private fun PrescriptionHeaderCard(
     title: String,
     doctorName: String,
-    savedAt: String,
     modifier: Modifier = Modifier
 ) {
     Card(
