@@ -20,13 +20,14 @@ android {
         applicationId = "com.aritradas.medai"
         minSdk = 24
         targetSdk = 35
-        versionCode = 13
-        versionName = "1.0.5"
+        versionCode = 14
+        versionName = "1.0.6"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         // Add BuildConfig field for Gemini API key
         buildConfigField("String", "GEMINI_API_KEY", "\"${project.findProperty("GEMINI_API_KEY") ?: ""}\"")
+        buildConfigField("String", "API_KEY", "\"${project.findProperty("API_KEY") ?: ""}\"")
     }
 
     buildTypes {
@@ -123,6 +124,12 @@ dependencies {
     // In-App Update
     implementation(libs.app.update)
     implementation(libs.app.update.ktx)
+
+    implementation (libs.retrofit)
+    implementation (libs.converter.gson)
+    implementation (libs.androidx.lifecycle.viewmodel.ktx)
+    implementation (libs.androidx.lifecycle.livedata.ktx)
+
 
     //Test
     testImplementation(libs.junit)

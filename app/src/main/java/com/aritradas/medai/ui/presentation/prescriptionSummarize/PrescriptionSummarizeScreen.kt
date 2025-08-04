@@ -13,11 +13,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -26,9 +28,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Flag
+import androidx.compose.material.icons.filled.MedicalServices
 import androidx.compose.material.icons.filled.Photo
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
@@ -42,14 +47,15 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -65,6 +71,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -79,6 +86,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.aritradas.medai.R
+import com.aritradas.medai.domain.model.DrugResult
 import com.aritradas.medai.domain.model.Medication
 import java.io.File
 import java.text.SimpleDateFormat
@@ -104,6 +112,10 @@ fun PrescriptionSummarizeScreen(
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     var cameraUri by remember { mutableStateOf<Uri?>(null) }
     var showBackWarningDialog by remember { mutableStateOf(false) }
+    var showDrugDetailModal by remember { mutableStateOf(false) }
+    val drugDetail by prescriptionViewModel.drugDetail.collectAsState()
+    val isDrugLoading by prescriptionViewModel.isDrugLoading.collectAsState()
+    val drugDetailError by prescriptionViewModel.drugDetailError.collectAsState()
 
     val createImageFile = {
         val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
@@ -152,14 +164,12 @@ fun PrescriptionSummarizeScreen(
             )
         )
         showDialog = false
-        Unit
     }
 
     val handleRemoveImage = {
         imageUri = null
         cameraUri = null
         prescriptionViewModel.clearSummary()
-        Unit
     }
 
     val handleSummarize = {
@@ -211,12 +221,50 @@ fun PrescriptionSummarizeScreen(
         Unit
     }
 
+    if (showDrugDetailModal) {
+        ModalBottomSheet(
+            onDismissRequest = {
+                showDrugDetailModal = false
+            }
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+            ) {
+                when {
+                    isDrugLoading -> {
+                        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                            LoadingIndicator(
+                                modifier = Modifier
+                                    .size(20.dp)
+                                    .align(Alignment.Center)
+                            )
+                        }
+                    }
+
+                    drugDetail != null -> {
+                        DrugDetailSheetContent(detail = drugDetail!!)
+                    }
+
+                    drugDetailError != null -> {
+                        Text(
+                            text = drugDetailError ?: "No data.",
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.padding(24.dp)
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
+            .systemBarsPadding()
             .nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            LargeTopAppBar(
+            TopAppBar(
                 title = {
                     Text(
                         text = "Scan Prescription",
@@ -261,15 +309,16 @@ fun PrescriptionSummarizeScreen(
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background,
                     scrolledContainerColor = MaterialTheme.colorScheme.background
-                )
+                ),
+                windowInsets = WindowInsets(0)
             )
         }
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
                 .padding(horizontal = 16.dp)
+                .padding(paddingValues)
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -491,7 +540,15 @@ fun PrescriptionSummarizeScreen(
                             Spacer(modifier = Modifier.height(8.dp))
 
                             summary.medications.forEach { medication ->
-                                MedicationCard(medication = medication)
+                                MedicationCard(
+                                    medication = medication,
+                                    onClick = {
+                                        prescriptionViewModel.fetchDrugDetailByGenericName(
+                                            medication.name
+                                        )
+                                        showDrugDetailModal = true
+                                    }
+                                )
                                 Spacer(modifier = Modifier.height(8.dp))
                             }
                         }
@@ -526,7 +583,7 @@ fun PrescriptionSummarizeScreen(
                             ) {
                                 Column(modifier = Modifier.padding(12.dp)) {
                                     Text(
-                                        text = "⚠️ Important Warnings:",
+                                        text = "Important Points:",
                                         style = MaterialTheme.typography.titleSmall,
                                         fontWeight = FontWeight.SemiBold,
                                         color = MaterialTheme.colorScheme.onErrorContainer
@@ -833,8 +890,119 @@ fun PrescriptionSummarizeScreen(
 }
 
 @Composable
-private fun MedicationCard(medication: Medication) {
+fun DrugDetailSheetContent(detail: DrugResult) {
+    Column(
+        modifier = Modifier
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState())
+    ) {
+        // Medicine name
+        Text(
+            text = detail.medicineName.replaceFirstChar { it.uppercase() },
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Uses section
+        DrugDetailSection(
+            title = "Uses",
+            content = detail.uses,
+            icon = Icons.Default.MedicalServices
+        )
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // Benefits section
+        DrugDetailSection(
+            title = "Benefits",
+            content = detail.benefits,
+            icon = Icons.Default.CheckCircle
+        )
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // Side effects section
+        DrugDetailSection(
+            title = "Side Effects",
+            content = detail.sideEffects,
+            icon = Icons.Default.Warning,
+            isWarning = true
+        )
+    }
+}
+
+@Composable
+private fun DrugDetailSection(
+    title: String,
+    content: List<String>,
+    icon: ImageVector,
+    isWarning: Boolean = false
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = if (isWarning) {
+                    MaterialTheme.colorScheme.error
+                } else {
+                    MaterialTheme.colorScheme.primary
+                },
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = if (isWarning) {
+                    MaterialTheme.colorScheme.error
+                } else {
+                    MaterialTheme.colorScheme.onSurface
+                }
+            )
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = if (isWarning) {
+                    MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.1f)
+                } else {
+                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                }
+            )
+        ) {
+            content.forEach { item ->
+                Text(
+                    modifier = Modifier.padding(8.dp),
+                    text = "• $item",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun MedicationCard(
+    medication: Medication,
+    onClick: () -> Unit
+) {
     Card(
+        modifier = Modifier
+            .clickable { onClick() },
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
