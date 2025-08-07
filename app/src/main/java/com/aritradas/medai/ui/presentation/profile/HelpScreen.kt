@@ -83,7 +83,6 @@ fun HelpScreen(
             Spacer(modifier = Modifier.height(2.dp))
 
             SettingsCard(
-                isLastItem = true,
                 itemName = stringResource(R.string.terms_conditions),
                 onClick = {
                     val intent = Intent(Intent.ACTION_VIEW)
@@ -95,7 +94,7 @@ fun HelpScreen(
             Spacer(modifier = Modifier.height(2.dp))
 
             SettingsCard(
-                isFirstItem = true,
+                isLastItem = true,
                 itemName = stringResource(R.string.privacy_policy),
                 onClick = {
                     val intent = Intent(Intent.ACTION_VIEW)
