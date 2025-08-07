@@ -21,7 +21,6 @@ import androidx.compose.material.icons.automirrored.outlined.Help
 import androidx.compose.material.icons.outlined.RateReview
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -43,7 +43,6 @@ import com.aritradas.medai.BuildConfig
 import com.aritradas.medai.R
 import com.aritradas.medai.navigation.Screens
 import com.aritradas.medai.ui.presentation.profile.components.SettingsCard
-import com.aritradas.medai.ui.presentation.profile.components.SettingsItemGroup
 import com.aritradas.medai.utils.Constants
 import com.aritradas.medai.utils.UtilsKt.getInitials
 import kotlinx.coroutines.delay
@@ -67,8 +66,10 @@ fun ProfileScreen(
             activity?.finish()
         } else {
             backPressedState = true
-            Toast.makeText(context,
-                context.getString(R.string.press_back_again_to_exit), Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                context,
+                context.getString(R.string.press_back_again_to_exit), Toast.LENGTH_SHORT
+            ).show()
 
             scope.launch {
                 delay(2.seconds)
@@ -126,61 +127,62 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            SettingsItemGroup {
-                SettingsCard(
-                    itemName = "Settings",
-                    iconVector = Icons.Outlined.Settings,
-                    onClick = {
-                        navController.navigate(Screens.Settings.route)
-                    }
-                )
 
-                HorizontalDivider(
-                    thickness = 1.dp,
-                )
+            SettingsCard(
+                isFirstItem = true,
+                itemName = stringResource(R.string.settings),
+                itemSubText = stringResource(R.string.manage_settings_of_the_app),
+                iconVector = Icons.Outlined.Settings,
+                onClick = {
+                    navController.navigate(Screens.Settings.route)
+                }
+            )
 
-                SettingsCard(
-                    itemName = "Help",
-                    itemSubText = "Get help using MedAI",
-                    iconVector = Icons.AutoMirrored.Outlined.Help,
-                    onClick = {
-                        navController.navigate(Screens.Help.route)
-                    }
-                )
-            }
+            Spacer(modifier = Modifier.height(2.dp))
+
+            SettingsCard(
+                isLastItem = true,
+                itemName = stringResource(R.string.help),
+                itemSubText = stringResource(R.string.get_help_using_medai),
+                iconVector = Icons.AutoMirrored.Outlined.Help,
+                onClick = {
+                    navController.navigate(Screens.Help.route)
+                }
+            )
+
 
             Spacer(modifier = Modifier.height(30.dp))
 
-            SettingsItemGroup {
-                SettingsCard(
-                    itemName = "Send Love",
-                    itemSubText = "Rate MedAI on the Play Store",
-                    iconVector = Icons.Outlined.RateReview,
-                    onClick = {
-                        val intent = Intent(Intent.ACTION_VIEW)
-                        intent.data = Constants.PLAY_STORE_URL.toUri()
-                        context.startActivity(intent)
-                    }
-                )
 
-                HorizontalDivider(
-                    thickness = 1.dp,
-                )
+            SettingsCard(
+                isFirstItem = true,
+                itemName = stringResource(R.string.send_love),
+                itemSubText = stringResource(R.string.rate_medai_on_the_play_store),
+                iconVector = Icons.Outlined.RateReview,
+                onClick = {
+                    val intent = Intent(Intent.ACTION_VIEW)
+                    intent.data = Constants.PLAY_STORE_URL.toUri()
+                    context.startActivity(intent)
+                }
+            )
 
-                SettingsCard(
-                    itemName = "Invite Friends",
-                    itemSubText = "Like MedAI? Share with friends!",
-                    iconVector = Icons.Outlined.Share,
-                    onClick = {
-                        val sendIntent = Intent(Intent.ACTION_SEND).apply {
-                            putExtra(Intent.EXTRA_TEXT, Constants.INVITE)
-                            type = "text/plain"
-                        }
-                        val shareIntent = Intent.createChooser(sendIntent, null)
-                        context.startActivity(shareIntent)
+            Spacer(modifier = Modifier.height(2.dp))
+
+            SettingsCard(
+                isLastItem = true,
+                itemName = stringResource(R.string.invite_friends),
+                itemSubText = stringResource(R.string.like_medai_share_with_friends),
+                iconVector = Icons.Outlined.Share,
+                onClick = {
+                    val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                        putExtra(Intent.EXTRA_TEXT, Constants.INVITE)
+                        type = "text/plain"
                     }
-                )
-            }
+                    val shareIntent = Intent.createChooser(sendIntent, null)
+                    context.startActivity(shareIntent)
+                }
+            )
+
 
             Spacer(modifier = Modifier.weight(1f))
 
