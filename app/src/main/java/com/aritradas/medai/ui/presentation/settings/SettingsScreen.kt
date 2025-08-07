@@ -39,7 +39,6 @@ import com.aritradas.medai.MainActivity
 import com.aritradas.medai.R
 import com.aritradas.medai.navigation.Screens
 import com.aritradas.medai.ui.presentation.profile.components.SettingsCard
-import com.aritradas.medai.ui.presentation.profile.components.SettingsItemGroup
 import com.aritradas.medai.ui.presentation.settings.component.SwitchCard
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -192,6 +191,7 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             SwitchCard(
+                isFirstItem = true,
                 itemName = stringResource(R.string.biometric_unlock),
                 itemSubText = stringResource(R.string.use_biometric_to_unlock_the_app),
                 isChecked = biometricAuthState,
@@ -203,12 +203,11 @@ fun SettingsScreen(
 
             Text(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 16.dp, end = 18.dp, top = 18.dp),
+                    .fillMaxWidth(),
                 text = "Danger Zone",
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             SettingsCard(
                 isFirstItem = true,
