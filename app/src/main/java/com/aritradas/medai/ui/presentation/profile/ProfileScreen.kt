@@ -67,8 +67,10 @@ fun ProfileScreen(
             activity?.finish()
         } else {
             backPressedState = true
-            Toast.makeText(context,
-                context.getString(R.string.press_back_again_to_exit), Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                context,
+                context.getString(R.string.press_back_again_to_exit), Toast.LENGTH_SHORT
+            ).show()
 
             scope.launch {
                 delay(2.seconds)
@@ -126,61 +128,61 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            SettingsItemGroup {
-                SettingsCard(
-                    itemName = "Settings",
-                    iconVector = Icons.Outlined.Settings,
-                    onClick = {
-                        navController.navigate(Screens.Settings.route)
-                    }
-                )
 
-                HorizontalDivider(
-                    thickness = 1.dp,
-                )
+            SettingsCard(
+                isFirstItem = true,
+                itemName = "Settings",
+                iconVector = Icons.Outlined.Settings,
+                onClick = {
+                    navController.navigate(Screens.Settings.route)
+                }
+            )
 
-                SettingsCard(
-                    itemName = "Help",
-                    itemSubText = "Get help using MedAI",
-                    iconVector = Icons.AutoMirrored.Outlined.Help,
-                    onClick = {
-                        navController.navigate(Screens.Help.route)
-                    }
-                )
-            }
+            Spacer(modifier = Modifier.height(2.dp))
+
+            SettingsCard(
+                isLastItem = true,
+                itemName = "Help",
+                itemSubText = "Get help using MedAI",
+                iconVector = Icons.AutoMirrored.Outlined.Help,
+                onClick = {
+                    navController.navigate(Screens.Help.route)
+                }
+            )
+
 
             Spacer(modifier = Modifier.height(30.dp))
 
-            SettingsItemGroup {
-                SettingsCard(
-                    itemName = "Send Love",
-                    itemSubText = "Rate MedAI on the Play Store",
-                    iconVector = Icons.Outlined.RateReview,
-                    onClick = {
-                        val intent = Intent(Intent.ACTION_VIEW)
-                        intent.data = Constants.PLAY_STORE_URL.toUri()
-                        context.startActivity(intent)
-                    }
-                )
 
-                HorizontalDivider(
-                    thickness = 1.dp,
-                )
+            SettingsCard(
+                isFirstItem = true,
+                itemName = "Send Love",
+                itemSubText = "Rate MedAI on the Play Store",
+                iconVector = Icons.Outlined.RateReview,
+                onClick = {
+                    val intent = Intent(Intent.ACTION_VIEW)
+                    intent.data = Constants.PLAY_STORE_URL.toUri()
+                    context.startActivity(intent)
+                }
+            )
 
-                SettingsCard(
-                    itemName = "Invite Friends",
-                    itemSubText = "Like MedAI? Share with friends!",
-                    iconVector = Icons.Outlined.Share,
-                    onClick = {
-                        val sendIntent = Intent(Intent.ACTION_SEND).apply {
-                            putExtra(Intent.EXTRA_TEXT, Constants.INVITE)
-                            type = "text/plain"
-                        }
-                        val shareIntent = Intent.createChooser(sendIntent, null)
-                        context.startActivity(shareIntent)
+            Spacer(modifier = Modifier.height(2.dp))
+
+            SettingsCard(
+                isLastItem = true,
+                itemName = "Invite Friends",
+                itemSubText = "Like MedAI? Share with friends!",
+                iconVector = Icons.Outlined.Share,
+                onClick = {
+                    val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                        putExtra(Intent.EXTRA_TEXT, Constants.INVITE)
+                        type = "text/plain"
                     }
-                )
-            }
+                    val shareIntent = Intent.createChooser(sendIntent, null)
+                    context.startActivity(shareIntent)
+                }
+            )
+
 
             Spacer(modifier = Modifier.weight(1f))
 

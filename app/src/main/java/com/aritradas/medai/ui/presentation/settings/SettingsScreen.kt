@@ -50,7 +50,8 @@ fun SettingsScreen(
 ) {
 
     val context = LocalContext.current
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+    val scrollBehavior =
+        TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     val onLogOutComplete by settingsViewModel.onLogOutComplete.observeAsState(false)
     val onDeleteAccountComplete by settingsViewModel.onDeleteAccountComplete.observeAsState(false)
     val biometricAuthState by settingsViewModel.biometricAuthState.collectAsState()
@@ -190,17 +191,15 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            SettingsItemGroup {
+            SwitchCard(
+                itemName = stringResource(R.string.biometric_unlock),
+                itemSubText = stringResource(R.string.use_biometric_to_unlock_the_app),
+                isChecked = biometricAuthState,
+                onChecked = {
+                    settingsViewModel.showBiometricPrompt(context as MainActivity)
+                }
+            )
 
-                SwitchCard(
-                    itemName = stringResource(R.string.biometric_unlock),
-                    itemSubText = stringResource(R.string.use_biometric_to_unlock_the_app),
-                    isChecked = biometricAuthState,
-                    onChecked = {
-                        settingsViewModel.showBiometricPrompt(context as MainActivity)
-                    }
-                )
-            }
 
             Text(
                 modifier = Modifier
@@ -209,27 +208,26 @@ fun SettingsScreen(
                 text = "Danger Zone",
             )
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
-            SettingsItemGroup {
-                SettingsCard(
-                    itemName = "Logout",
-                    onClick = {
-                        openLogoutDialog = true
-                    }
-                )
-            }
+            SettingsCard(
+                isFirstItem = true,
+                itemName = "Logout",
+                onClick = {
+                    openLogoutDialog = true
+                }
+            )
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
-            SettingsItemGroup {
-                SettingsCard(
-                    itemName = "Delete Account",
-                    onClick = {
-                        openDeleteAccountDialog = true
-                    }
-                )
-            }
+            SettingsCard(
+                isLastItem = true,
+                itemName = "Delete Account",
+                onClick = {
+                    openDeleteAccountDialog = true
+                }
+            )
+
         }
     }
 }
