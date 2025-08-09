@@ -291,7 +291,7 @@ fun SignUpScreen(
                 Text(
                     modifier = Modifier.clickable {
                         if (!isLoading) {
-                            navController.navigate(Screens.Login.route)
+                            navController.navigate(Screens.Login)
                         }
                     },
                     text = "Login",

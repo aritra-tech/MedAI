@@ -9,12 +9,13 @@ plugins {
     id("dagger.hilt.android.plugin")
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
     alias(libs.plugins.google.firebase.crashlytics)
+    alias(libs.plugins.jetbrains.kotlin.serialization)
     id("io.gitlab.arturbosch.detekt")
 }
 
 android {
     namespace = "com.aritradas.medai"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.aritradas.medai"
@@ -79,6 +80,10 @@ dependencies {
 
     //Navigation
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.navigation3.ui)
+    implementation(libs.androidx.navigation3.runtime)
+    implementation(libs.androidx.lifecycle.viewmodel.navigation3)
+    implementation(libs.kotlinx.serialization.core)
 
     // Hilt
     implementation(libs.hilt.android)
