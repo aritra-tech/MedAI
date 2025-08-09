@@ -15,7 +15,7 @@ plugins {
 
 android {
     namespace = "com.aritradas.medai"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.aritradas.medai"

@@ -104,8 +104,8 @@ fun LoginScreen(
     LaunchedEffect(loginSuccess) {
         loginSuccess?.let { success ->
             if (success) {
-                navController.navigate(Screens.Prescription.route) {
-                    popUpTo(Screens.Onboarding.route) { inclusive = true }
+                navController.navigate(Screens.Prescription) {
+                    popUpTo(Screens.Onboarding) { inclusive = true }
                 }
             }
         }
@@ -218,7 +218,7 @@ fun LoginScreen(
             AnimatedVisibility(!isKeyboardVisible) {
                 TextButton(
                     onClick = {
-                        navController.navigate(Screens.Forgot.route)
+                        navController.navigate(Screens.Forgot)
                     },
                     enabled = !isLoading
                 ) {
@@ -267,7 +267,7 @@ fun LoginScreen(
                 Text(
                     modifier = Modifier.clickable {
                         if (!isLoading) {
-                            navController.navigate(Screens.SignUp.route)
+                            navController.navigate(Screens.SignUp)
                         }
                     },
                     text = "Create an Account",

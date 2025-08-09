@@ -58,7 +58,7 @@ fun SettingsScreen(
     var openDeleteAccountDialog by remember { mutableStateOf(false) }
 
     if (onLogOutComplete || onDeleteAccountComplete) {
-        navController.navigate(Screens.Onboarding.route)
+        navController.navigate(Screens.Onboarding)
     }
 
     when {

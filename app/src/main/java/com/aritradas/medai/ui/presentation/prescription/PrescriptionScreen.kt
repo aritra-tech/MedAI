@@ -205,9 +205,9 @@ fun PrescriptionScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { 
+                onClick = {
                     navController.navigate(
-                        "${Screens.PrescriptionSummarize.route}?hasCameraPermission=$hasCameraPermission"
+                        Screens.PrescriptionSummarize(hasCameraPermission = hasCameraPermission)
                     )
                 }
             ) {

@@ -134,7 +134,7 @@ fun ProfileScreen(
                 itemSubText = stringResource(R.string.manage_settings_of_the_app),
                 iconVector = Icons.Outlined.Settings,
                 onClick = {
-                    navController.navigate(Screens.Settings.route)
+                    navController.navigate(Screens.Settings)
                 }
             )
 
@@ -146,7 +146,7 @@ fun ProfileScreen(
                 itemSubText = stringResource(R.string.get_help_using_medai),
                 iconVector = Icons.AutoMirrored.Outlined.Help,
                 onClick = {
-                    navController.navigate(Screens.Help.route)
+                    navController.navigate(Screens.Help)
                 }
             )
 
