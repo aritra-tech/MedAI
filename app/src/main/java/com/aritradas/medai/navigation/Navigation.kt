@@ -19,6 +19,7 @@ import androidx.navigation.toRoute
 import com.aritradas.medai.ui.presentation.auth.ForgotPasswordScreen
 import com.aritradas.medai.ui.presentation.auth.LoginScreen
 import com.aritradas.medai.ui.presentation.auth.SignUpScreen
+import com.aritradas.medai.ui.presentation.medicalReport.MedicalReport
 import com.aritradas.medai.ui.presentation.onboarding.WelcomeScreen
 import com.aritradas.medai.ui.presentation.prescription.PrescriptionScreen
 import com.aritradas.medai.ui.presentation.prescriptionDetails.PrescriptionDetailsScreen
@@ -48,6 +49,7 @@ fun Navigation(splashViewModel: SplashViewModel) {
 
     val bottomBarScreens = listOf(
         Screens.Prescription::class,
+        Screens.MedicalReport::class,
         Screens.Profile::class
     )
 
@@ -120,6 +122,12 @@ fun Navigation(splashViewModel: SplashViewModel) {
                 PrescriptionSummarizeScreen(
                     navController = navController,
                     hasCameraPermission = prescriptionSummarize.hasCameraPermission
+                )
+            }
+
+            composable<Screens.MedicalReport> {
+                MedicalReport(
+                    navController = navController,
                 )
             }
 
