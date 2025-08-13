@@ -29,6 +29,9 @@ sealed class Screens {
     data object MedicalReport: Screens()
 
     @Serializable
+    data class MedicalReportSummarize: Screens()
+
+    @Serializable
     data object Profile : Screens()
 
     @Serializable
