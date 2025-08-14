@@ -83,14 +83,76 @@ fun MedicalReport(
     val context = LocalContext.current
     var backPressedState by remember { mutableStateOf(false) }
 
+    var hasNotificationPermission by remember {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            mutableStateOf(
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) == PackageManager.PERMISSION_GRANTED
+            )
+        } else {
+            mutableStateOf(true)
+        }
+    }
+
+    var hasCameraPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.CAMERA
+            ) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+
+    var permissionRequestInProgress by remember { mutableStateOf(false) }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+            hasNotificationPermission = isGranted
+            permissionRequestInProgress = false
+        }
+    )
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+            hasCameraPermission = isGranted
+            permissionRequestInProgress = false
+        }
+    )
+
+    LaunchedEffect(
+        hasNotificationPermission,
+        hasCameraPermission,
+        permissionRequestInProgress
+    ) {
+        if (permissionRequestInProgress) return@LaunchedEffect
+
+        // Request permissions one by one in order of priority
+        when {
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !hasNotificationPermission -> {
+                permissionRequestInProgress = true
+                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+
+            !hasCameraPermission -> {
+                permissionRequestInProgress = true
+                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+            }
+        }
+    }
 
     BackHandler {
         if (backPressedState) {
             activity?.finish()
         } else {
             backPressedState = true
-            Toast.makeText(context,
-                context.getString(R.string.press_back_again_to_exit), Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                context,
+                context.getString(R.string.press_back_again_to_exit), Toast.LENGTH_SHORT
+            ).show()
 
             scope.launch {
                 delay(2.seconds)
@@ -139,7 +201,7 @@ fun MedicalReport(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    navController.navigate(Screens.MedicalReportSummarize)
+                    navController.navigate(Screens.MedicalReportSummarize(hasCameraPermission = hasCameraPermission))
                 }
             ) {
                 Icon(

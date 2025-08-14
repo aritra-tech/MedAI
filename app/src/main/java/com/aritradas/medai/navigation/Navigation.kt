@@ -132,9 +132,13 @@ fun Navigation(splashViewModel: SplashViewModel) {
                 )
             }
 
-            composable<Screens.MedicalReportSummarize> {
+            composable<Screens.MedicalReportSummarize> { backStackEntry ->
+
+                val medicalReportSummarize: Screens.MedicalReportSummarize = backStackEntry.toRoute()
+
                 MedicalReportSummarizeScreen(
                     navController = navController,
+                    hasCameraPermission = medicalReportSummarize.hasCameraPermission
                 )
             }
 
