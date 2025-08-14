@@ -4,8 +4,12 @@ import java.util.Date
 
 data class MedicalReportSummary(
     val doctorName: String = "",
+    val medications: List<Medication> = emptyList(),
+    val dosageInstructions: List<String> = emptyList(),
     val summary: String = "",
     val warnings: List<String> = emptyList(),
+    val reportReason: String = "",
+    val stepsToCure: List<String> = emptyList()
 )
 
 data class SavedMedicalReport(
