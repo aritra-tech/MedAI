@@ -523,49 +523,6 @@ fun MedicalReportSummarizeScreen(
                             Spacer(modifier = Modifier.height(16.dp))
                         }
 
-                        if (summary.medications.isNotEmpty()) {
-                            Text(
-                                text = "Medications:",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            summary.medications.forEach { medication ->
-                                MedicationCard(
-                                    medication = medication,
-                                    onClick = {
-                                        reportViewModel.fetchDrugDetailByGenericName(
-                                            medication.name
-                                        )
-                                        showDrugDetailModal = true
-                                    }
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                            }
-                        }
-
-                        if (summary.stepsToCure.isNotEmpty()) {
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = "Steps:",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Column {
-                                summary.stepsToCure.forEach { step ->
-                                    Text(
-                                        text = "• $step",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.padding(bottom = 4.dp)
-                                    )
-                                }
-                            }
-                        }
 
                         if (summary.warnings.isNotEmpty()) {
                             Spacer(modifier = Modifier.height(16.dp))
@@ -591,29 +548,6 @@ fun MedicalReportSummarizeScreen(
                                         )
                                     }
                                 }
-                            }
-                        }
-
-                        if (summary.reportReason.isNotEmpty()) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.Start
-                            ) {
-                                AssistChip(
-                                    modifier = Modifier.padding(vertical = 8.dp),
-                                    onClick = {},
-                                    label = {
-                                        Text(
-                                            text = summary.reportReason,
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = MaterialTheme.colorScheme.onSurface
-                                        )
-                                    },
-                                    shape = RoundedCornerShape(50),
-                                    colors = AssistChipDefaults.assistChipColors(
-                                        containerColor = MaterialTheme.colorScheme.surface
-                                    )
-                                )
                             }
                         }
                     }

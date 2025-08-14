@@ -9,7 +9,6 @@ import android.provider.MediaStore
 import com.aritradas.medai.BuildConfig
 import com.aritradas.medai.domain.model.GeminiMedicalReportResponse
 import com.aritradas.medai.domain.model.MedicalReportSummary
-import com.aritradas.medai.domain.model.Medication
 import com.aritradas.medai.domain.model.SavedMedicalReport
 import com.aritradas.medai.domain.repository.MedicalReportRepository
 import com.aritradas.medai.utils.Resource
@@ -75,16 +74,9 @@ class MedicalReportRepositoryImpl @Inject constructor(
                     Respond ONLY with valid JSON in exactly this format (no additional text or markdown):
                     {
                         "doctorName": "Doctor or facility name if present, else 'Unknown Doctor'",
-                        "medications": [
-                            { "name": "", "dosage": "", "frequency": "", "duration": "" }
-                        ],
-                        "dosageInstructions": ["patient-friendly dosing instructions if present"],
                         "summary": "Plain-English summary of the report findings, diagnosis, and implications",
                         "warnings": ["important warnings or red flags to consider"],
                         "reportReason": "Primary reason/condition/test focus for this report (e.g., CBC, Chest X-ray, Diabetes follow-up)",
-                        "stepsToCure": [
-                          "Actionable next steps or care plan based on the report (follow-up, lifestyle, treatment notes). If unavailable, provide general guidance to consult doctor."
-                        ]
                     }
                     Ensure all keys are present even if arrays are empty.
                     Avoid medical jargon; use layman's terms in the summary and steps.
@@ -118,8 +110,6 @@ class MedicalReportRepositoryImpl @Inject constructor(
                     "savedAt" to report.savedAt,
                     "title" to report.title,
                     "report" to report.report,
-                    "reportReason" to report.summary.reportReason,
-                    "stepsToCure" to report.summary.stepsToCure
                 )
 
                 val documentRef = firestore
@@ -156,28 +146,10 @@ class MedicalReportRepositoryImpl @Inject constructor(
                         val summaryMap =
                             data["summary"] as? Map<String, Any> ?: return@mapNotNull null
 
-                        val medicationsData =
-                            summaryMap["medications"] as? List<Map<String, Any>> ?: emptyList()
-                        val medications = medicationsData.map { medMap ->
-                            Medication(
-                                name = medMap["name"] as? String ?: "",
-                                dosage = medMap["dosage"] as? String ?: "",
-                                frequency = medMap["frequency"] as? String ?: "",
-                                duration = medMap["duration"] as? String ?: ""
-                            )
-                        }
-
                         val summary = MedicalReportSummary(
                             doctorName = summaryMap["doctorName"] as? String ?: "Unknown Doctor",
-                            medications = medications,
-                            dosageInstructions = (summaryMap["dosageInstructions"] as? List<String>)
-                                ?: emptyList(),
                             summary = summaryMap["summary"] as? String ?: "",
                             warnings = (summaryMap["warnings"] as? List<String>) ?: emptyList(),
-                            reportReason = summaryMap["reportReason"] as? String
-                                ?: (data["reportReason"] as? String ?: ""),
-                            stepsToCure = (summaryMap["stepsToCure"] as? List<String>)
-                                ?: (data["stepsToCure"] as? List<String> ?: emptyList())
                         )
 
                         SavedMedicalReport(
@@ -222,28 +194,10 @@ class MedicalReportRepositoryImpl @Inject constructor(
                 val summaryMap = data["summary"] as? Map<String, Any>
                     ?: return@withContext Resource.Error("Invalid summary data")
 
-                val medicationsData =
-                    summaryMap["medications"] as? List<Map<String, Any>> ?: emptyList()
-                val medications = medicationsData.map { medMap ->
-                    Medication(
-                        name = medMap["name"] as? String ?: "",
-                        dosage = medMap["dosage"] as? String ?: "",
-                        frequency = medMap["frequency"] as? String ?: "",
-                        duration = medMap["duration"] as? String ?: ""
-                    )
-                }
-
                 val summary = MedicalReportSummary(
                     doctorName = summaryMap["doctorName"] as? String ?: "Unknown Doctor",
-                    medications = medications,
-                    dosageInstructions = (summaryMap["dosageInstructions"] as? List<String>)
-                        ?: emptyList(),
                     summary = summaryMap["summary"] as? String ?: "",
-                    warnings = (summaryMap["warnings"] as? List<String>) ?: emptyList(),
-                    reportReason = summaryMap["reportReason"] as? String
-                        ?: (data["reportReason"] as? String ?: ""),
-                    stepsToCure = (summaryMap["stepsToCure"] as? List<String>)
-                        ?: (data["stepsToCure"] as? List<String> ?: emptyList())
+                    warnings = (summaryMap["warnings"] as? List<String>) ?: emptyList()
                 )
 
                 val report = SavedMedicalReport(
@@ -306,31 +260,16 @@ class MedicalReportRepositoryImpl @Inject constructor(
 
             MedicalReportSummary(
                 doctorName = parsed.doctorName,
-                medications = parsed.medications.map { med ->
-                    Medication(
-                        name = med.name,
-                        dosage = med.dosage,
-                        frequency = med.frequency,
-                        duration = med.duration
-                    )
-                },
-                dosageInstructions = parsed.dosageInstructions,
                 summary = parsed.summary,
-                warnings = parsed.warnings,
-                reportReason = parsed.reportReason,
-                stepsToCure = parsed.stepsToCure
+                warnings = parsed.warnings
             )
         } catch (e: JsonSyntaxException) {
             parseFallbackResponse(responseText)
         } catch (e: Exception) {
             MedicalReportSummary(
                 doctorName = "Unknown Doctor",
-                medications = emptyList(),
-                dosageInstructions = listOf("Could not parse report details"),
                 summary = "Failed to analyze report image. Raw response: ${responseText.take(100)}...",
-                warnings = listOf("Please consult with a healthcare professional for accurate information"),
-                reportReason = "Parse error",
-                stepsToCure = listOf("Unable to extract next steps. Please follow up with your doctor.")
+                warnings = listOf("Please consult with a healthcare professional for accurate information")
             )
         }
     }
@@ -338,12 +277,8 @@ class MedicalReportRepositoryImpl @Inject constructor(
     private fun parseFallbackResponse(text: String): MedicalReportSummary {
         return MedicalReportSummary(
             doctorName = "Unknown Doctor",
-            medications = emptyList(),
-            dosageInstructions = emptyList(),
             summary = text.take(300) + if (text.length > 300) "..." else "",
-            warnings = listOf("AI-generated summary - Please verify with healthcare professional"),
-            reportReason = "Could not extract reason",
-            stepsToCure = listOf("General advice: Consult your doctor for interpretation and next steps.")
+            warnings = listOf("AI-generated summary - Please verify with healthcare professional")
         )
     }
 }
