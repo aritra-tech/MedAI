@@ -26,7 +26,7 @@ sealed class Screens {
     data class PrescriptionSummarize(val hasCameraPermission: Boolean = false) : Screens()
 
     @Serializable
-    data object MedicalReport: Screens()
+    data object MedicalReportScreen: Screens()
 
     @Serializable
     data class MedicalReportSummarize(val hasCameraPermission: Boolean = false): Screens()

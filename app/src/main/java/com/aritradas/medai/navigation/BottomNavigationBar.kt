@@ -36,7 +36,7 @@ fun BottomNavigationBar(navController: NavController) {
         ),
         BottomNavItem(
             name = "Reports",
-            screen = Screens.MedicalReport,
+            screen = Screens.MedicalReportScreen,
             iconOutlined = Icons.Outlined.MedicalInformation,
             iconFilled = Icons.Filled.MedicalInformation
         ),
