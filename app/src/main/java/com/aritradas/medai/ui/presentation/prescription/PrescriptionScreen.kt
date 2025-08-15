@@ -199,7 +199,6 @@ fun PrescriptionScreen(
                         }
                     }
                 },
-                shape = RoundedCornerShape(12.dp),
                 tonalElevation = SearchBarDefaults.Elevation
             )
         },
