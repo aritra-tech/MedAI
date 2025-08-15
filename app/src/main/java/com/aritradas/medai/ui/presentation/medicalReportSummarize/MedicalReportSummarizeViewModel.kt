@@ -7,7 +7,6 @@ import androidx.lifecycle.viewModelScope
 import com.aritradas.medai.domain.model.DrugResult
 import com.aritradas.medai.domain.model.SavedMedicalReport
 import com.aritradas.medai.domain.repository.MedicalReportRepository
-import com.aritradas.medai.domain.repository.MedicineDetailsRepository
 import com.aritradas.medai.ui.presentation.medicalReportSummarize.state.MedicalReportUiState
 import com.aritradas.medai.utils.ImageValidator
 import com.aritradas.medai.utils.Resource
@@ -26,7 +25,6 @@ import javax.inject.Inject
 @HiltViewModel
 class MedicalReportSummarizeViewModel @Inject constructor(
     private val reportRepository: MedicalReportRepository,
-    private val medicineDetailsRepository: MedicineDetailsRepository,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -245,29 +243,6 @@ class MedicalReportSummarizeViewModel @Inject constructor(
 
                 is Resource.Error -> {}
                 is Resource.Loading -> {}
-            }
-        }
-    }
-
-    fun fetchDrugDetailByGenericName(medicineName: String) {
-        viewModelScope.launch {
-            _isDrugLoading.value = true
-            _drugDetailError.value = null
-            _drugDetail.value = null
-            try {
-                val result = medicineDetailsRepository.getDrugInfo(medicineName.trim())
-                if (result != null) {
-                    _drugDetail.value = result
-                } else {
-                    _drugDetailError.value =
-                        "Unable to fetch information for '$medicineName'. Please check the medicine name or consult a healthcare professional."
-                }
-            } catch (e: Exception) {
-                _drugDetailError.value =
-                    "Failed to fetch medicine details. Please check your internet connection and try again."
-                _drugDetail.value = null
-            } finally {
-                _isDrugLoading.value = false
             }
         }
     }

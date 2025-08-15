@@ -70,16 +70,33 @@ class MedicalReportRepositoryImpl @Inject constructor(
             try {
                 val bitmap = uriToBitmap(imageUri)
                 val prompt = """
-                    Analyze this medical report image and extract the following information.
-                    Respond ONLY with valid JSON in exactly this format (no additional text or markdown):
+                    You are a medical report assistant. Analyze the attached medical report image and produce a precise, patient‑friendly summary.
+                    
+                    Return ONLY valid JSON (no preface, no markdown fences) with these keys:
                     {
-                        "doctorName": "Doctor or facility name if present, else 'Unknown Doctor'",
-                        "summary": "Plain-English summary of the report findings, diagnosis, and implications",
-                        "warnings": ["important warnings or red flags to consider"],
-                        "reportReason": "Primary reason/condition/test focus for this report (e.g., CBC, Chest X-ray, Diabetes follow-up)",
+                      "doctorName": "Doctor/facility name if present, else 'Unknown Doctor'",
+                      "reportReason": "Primary reason, exam/test name or focus (e.g., FibroScan, CBC, Chest X‑ray)",
+                      "summary": "Patient‑friendly narrative that mirrors the example style below",
+                      "warnings": ["Important warnings/red flags/notes if present"]
                     }
-                    Ensure all keys are present even if arrays are empty.
-                    Avoid medical jargon; use layman's terms in the summary and steps.
+                    
+                    Build the "summary" value as a clear narrative suitable for patients. If the report is a quantitative test (e.g., FibroScan, labs, imaging), follow this structure when information is available:
+                    - Patient: <patient name>
+                    - Exam Date: <date>
+                    - 1) Main metric(s): For each key parameter, include:
+                      • Parameter name
+                      • The patient's result with unit (e.g., Median E: 3.8 kPa, CAP: 154 dB/m)
+                      • A one‑line interpretation in lay terms (e.g., "well within the normal range; no evidence of significant fibrosis")
+                    - Technical quality (if present): (e.g., IQR/Med %, number of valid measurements) and what it means for reliability
+                    - Overall Conclusion: a concise bottom‑line statement in plain English
+                    - Add a final disclaimer: "This is a summary of the provided report. Discuss results with your doctor, who will interpret them in the context of your overall health."
+                    
+                    Requirements:
+                    - Keep explanations non‑alarmist and in plain English.
+                    - Include units and normal/abnormal interpretation when inferable.
+                    - If specific fields (name/date/parameters) are missing, omit those lines and still provide a sensible conclusion.
+                    - Do NOT invent values; only interpret what is visible. If unsure, say so briefly.
+                    - The JSON must be strictly valid. The narrative goes inside the single string field "summary" and may include headings and bullets.
                 """.trimIndent()
 
                 val inputContent = content {

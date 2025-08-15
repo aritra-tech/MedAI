@@ -200,37 +200,6 @@ fun MedicalReportDetailsScreen(
                             SummaryCard(summary = report.summary.summary)
                         }
 
-                        if (report.summary.medications.isNotEmpty()) {
-                            item {
-                                MedicationsCard(
-                                    medications = report.summary.medications,
-                                    onMedicationClick = { name ->
-                                        reportViewModel.fetchDrugDetailByGenericName(name)
-                                        onShowDrugDetailModal(true)
-                                    }
-                                )
-                            }
-                        }
-
-                        if (report.summary.dosageInstructions.isNotEmpty()) {
-                            item {
-                                InstructionsCard(
-                                    title = "Dosage Instructions",
-                                    instructions = report.summary.dosageInstructions
-                                )
-                            }
-                        }
-
-                        if (report.summary.stepsToCure.isNotEmpty()) {
-                            item {
-                                InstructionsCard(
-                                    title = "How to recover fast?",
-                                    image = Icons.Outlined.Info,
-                                    instructions = report.summary.stepsToCure
-                                )
-                            }
-                        }
-
                         if (report.summary.warnings.isNotEmpty()) {
                             item {
                                 WarningsCard(warnings = report.summary.warnings)
