@@ -19,6 +19,9 @@ import androidx.navigation.toRoute
 import com.aritradas.medai.ui.presentation.auth.ForgotPasswordScreen
 import com.aritradas.medai.ui.presentation.auth.LoginScreen
 import com.aritradas.medai.ui.presentation.auth.SignUpScreen
+import com.aritradas.medai.ui.presentation.medicalReport.MedicalReportScreen
+import com.aritradas.medai.ui.presentation.medicalReportSummarize.MedicalReportSummarizeScreen
+import com.aritradas.medai.ui.presentation.medicalReportDetails.MedicalReportDetailsScreen
 import com.aritradas.medai.ui.presentation.onboarding.WelcomeScreen
 import com.aritradas.medai.ui.presentation.prescription.PrescriptionScreen
 import com.aritradas.medai.ui.presentation.prescriptionDetails.PrescriptionDetailsScreen
@@ -48,6 +51,7 @@ fun Navigation(splashViewModel: SplashViewModel) {
 
     val bottomBarScreens = listOf(
         Screens.Prescription::class,
+        Screens.MedicalReportScreen::class,
         Screens.Profile::class
     )
 
@@ -120,6 +124,30 @@ fun Navigation(splashViewModel: SplashViewModel) {
                 PrescriptionSummarizeScreen(
                     navController = navController,
                     hasCameraPermission = prescriptionSummarize.hasCameraPermission
+                )
+            }
+
+            composable<Screens.MedicalReportScreen> {
+                MedicalReportScreen(
+                    navController = navController,
+                )
+            }
+
+            composable<Screens.MedicalReportSummarize> { backStackEntry ->
+
+                val medicalReportSummarize: Screens.MedicalReportSummarize = backStackEntry.toRoute()
+
+                MedicalReportSummarizeScreen(
+                    navController = navController,
+                    hasCameraPermission = medicalReportSummarize.hasCameraPermission
+                )
+            }
+
+            composable<Screens.MedicalReportDetails> { backStackEntry ->
+                val details: Screens.MedicalReportDetails = backStackEntry.toRoute()
+                MedicalReportDetailsScreen(
+                    navController = navController,
+                    reportId = details.id
                 )
             }
 

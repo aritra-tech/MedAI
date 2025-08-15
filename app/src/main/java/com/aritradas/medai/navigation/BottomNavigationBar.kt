@@ -3,7 +3,9 @@ package com.aritradas.medai.navigation
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.automirrored.outlined.Assignment
+import androidx.compose.material.icons.filled.MedicalInformation
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.outlined.MedicalInformation
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -31,6 +33,12 @@ fun BottomNavigationBar(navController: NavController) {
             screen = Screens.Prescription,
             iconOutlined = Icons.AutoMirrored.Outlined.Assignment,
             iconFilled = Icons.AutoMirrored.Filled.Assignment
+        ),
+        BottomNavItem(
+            name = "Reports",
+            screen = Screens.MedicalReportScreen,
+            iconOutlined = Icons.Outlined.MedicalInformation,
+            iconFilled = Icons.Filled.MedicalInformation
         ),
         BottomNavItem(
             name = "Profile",
