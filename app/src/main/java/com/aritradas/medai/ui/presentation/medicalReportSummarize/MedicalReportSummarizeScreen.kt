@@ -78,7 +78,6 @@ import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.aritradas.medai.domain.model.Medication
 import com.aritradas.medai.ui.presentation.prescriptionSummarize.DrugDetailSheetContent
 import java.io.File
 import java.text.SimpleDateFormat
@@ -803,57 +802,5 @@ fun MedicalReportSummarizeScreen(
                 }
             }
         )
-    }
-}
-
-@Composable
-private fun MedicationCard(
-    medication: Medication,
-    onClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .clickable { onClick() },
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp)
-        ) {
-            Text(
-                text = medication.name,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-
-            if (medication.dosage.isNotEmpty()) {
-                Text(
-                    text = "Dosage: ${medication.dosage}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            if (medication.frequency.isNotEmpty()) {
-                Text(
-                    text = "Frequency: ${medication.frequency}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            if (medication.duration.isNotEmpty()) {
-                Text(
-                    text = "Duration: ${medication.duration}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
     }
 }

@@ -9,6 +9,7 @@ import android.provider.MediaStore
 import com.aritradas.medai.BuildConfig
 import com.aritradas.medai.domain.model.GeminiMedicalReportResponse
 import com.aritradas.medai.domain.model.MedicalReportSummary
+import com.aritradas.medai.domain.model.Medication
 import com.aritradas.medai.domain.model.SavedMedicalReport
 import com.aritradas.medai.domain.repository.MedicalReportRepository
 import com.aritradas.medai.utils.Resource
@@ -277,8 +278,19 @@ class MedicalReportRepositoryImpl @Inject constructor(
 
             MedicalReportSummary(
                 doctorName = parsed.doctorName,
+                medications = parsed.medications.map { med ->
+                    Medication(
+                        name = med.name,
+                        dosage = med.dosage,
+                        frequency = med.frequency,
+                        duration = med.duration
+                    )
+                },
+                dosageInstructions = parsed.dosageInstructions,
                 summary = parsed.summary,
-                warnings = parsed.warnings
+                warnings = parsed.warnings,
+                reportReason = parsed.reportReason,
+                stepsToCure = parsed.stepsToCure
             )
         } catch (e: JsonSyntaxException) {
             parseFallbackResponse(responseText)

@@ -20,10 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Flag
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.Medication
 import androidx.compose.material.icons.outlined.Summarize
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -50,13 +47,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.aritradas.medai.domain.model.Medication
 import com.aritradas.medai.ui.presentation.medicalReportSummarize.MedicalReportSummarizeViewModel
 import com.aritradas.medai.ui.presentation.prescriptionSummarize.DrugDetailSheetContent
 
@@ -76,9 +71,7 @@ fun MedicalReportDetailsScreen(
     var reportReason by remember { mutableStateOf("") }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var deleteTriggered by remember { mutableStateOf(false) }
-    val handleReport = { showReportTypeDialog = true }
     var showDrugDetailModal by remember { mutableStateOf(false) }
-    val onShowDrugDetailModal: (Boolean) -> Unit = { showDrugDetailModal = it }
     val drugDetail by reportViewModel.drugDetail.collectAsState()
     val isDrugLoading by reportViewModel.isDrugLoading.collectAsState()
     val drugDetailError by reportViewModel.drugDetailError.collectAsState()
@@ -190,10 +183,7 @@ fun MedicalReportDetailsScreen(
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         item {
-                            HeaderCard(
-                                title = report.title,
-                                doctorName = report.summary.doctorName
-                            )
+                            HeaderCard(title = report.title)
                         }
 
                         item {
@@ -415,7 +405,6 @@ fun MedicalReportDetailsScreen(
 @Composable
 private fun HeaderCard(
     title: String,
-    doctorName: String,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -432,24 +421,6 @@ private fun HeaderCard(
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold
             )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = "Doctor",
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = doctorName,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium
-                )
-            }
         }
     }
 }
@@ -489,161 +460,6 @@ private fun SummaryCard(
                 lineHeight = MaterialTheme.typography.bodyMedium.lineHeight
             )
         }
-    }
-}
-
-@Composable
-private fun MedicationsCard(
-    medications: List<Medication>,
-    onMedicationClick: (String) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Medication,
-                    contentDescription = "Medications",
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Medications (${medications.size})",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            medications.forEach { medication ->
-                MedicationItem(
-                    medication = medication,
-                    onClick = { onMedicationClick(medication.name) }
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-        }
-    }
-}
-
-@Composable
-private fun MedicationItem(
-    medication: Medication,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable { onClick() },
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp)
-        ) {
-            Text(
-                text = medication.name,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Medium
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            if (medication.dosage.isNotEmpty()) {
-                Text(
-                    text = "Dosage: ${medication.dosage}",
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-            if (medication.frequency.isNotEmpty()) {
-                Text(
-                    text = "Frequency: ${medication.frequency}",
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-            if (medication.duration.isNotEmpty()) {
-                Text(
-                    text = "Duration: ${medication.duration}",
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun InstructionsCard(
-    title: String,
-    image: ImageVector? = null,
-    instructions: List<String>
-) {
-    var showTooltip by remember { mutableStateOf(false) }
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterHorizontally),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-
-                if (image != null) {
-                    Icon(
-                        modifier = Modifier
-                            .size(16.dp)
-                            .clickable { showTooltip = true },
-                        imageVector = image,
-                        contentDescription = "Info CTA"
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-            instructions.forEach { instruction ->
-                Text(
-                    text = "• $instruction",
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(vertical = 2.dp)
-                )
-            }
-        }
-    }
-    if (showTooltip) {
-        AlertDialog(
-            onDismissRequest = { showTooltip = false },
-            title = { Text("Note") },
-            text = {
-                Text("These steps are generated by AI and intended for informational purposes only. Please consult a qualified medical professional for accurate diagnosis and treatment.")
-            },
-            confirmButton = {
-                TextButton(onClick = { showTooltip = false }) {
-                    Text("OK")
-                }
-            }
-        )
     }
 }
 

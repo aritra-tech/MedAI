@@ -65,9 +65,9 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun providesMedicineDetailsRepository(
-        medicineDetailsRepositoryImpl: MedicineDetailsRepositoryImpl
-    ): MedicineDetailsRepository = medicineDetailsRepositoryImpl
+    fun provideMedicineDetailsRepository(
+        impl: MedicineDetailsRepositoryImpl
+    ): MedicineDetailsRepository = impl
 
     @Provides
     @Singleton

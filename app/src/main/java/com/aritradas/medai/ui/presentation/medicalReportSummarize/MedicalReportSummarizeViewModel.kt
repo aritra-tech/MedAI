@@ -160,14 +160,18 @@ class MedicalReportSummarizeViewModel @Inject constructor(
                 saveSuccess = false
             )
 
-            val title =
-                if (currentSummary.doctorName.isNotBlank() && currentSummary.doctorName != "Unknown Doctor") {
-                    "${currentSummary.doctorName}'s report"
-                } else {
+            val reason = currentSummary.reportReason.takeIf {
+                it.isNotBlank() && it.lowercase(Locale.getDefault()) != "not clearly visible"
+            }
+            val title = when {
+                !reason.isNullOrBlank() -> "Medical Report - $reason"
+                currentSummary.doctorName.isNotBlank() && currentSummary.doctorName != "Unknown Doctor" -> "${currentSummary.doctorName}'s report"
+                else -> {
                     val dateFormat =
                         SimpleDateFormat("MMM dd, yyyy 'at' hh:mm a", Locale.getDefault())
                     "Medical Report - ${dateFormat.format(Date())}"
                 }
+            }
 
             val saved = SavedMedicalReport(
                 summary = currentSummary,
@@ -220,14 +224,18 @@ class MedicalReportSummarizeViewModel @Inject constructor(
         if (currentReport.isBlank()) return
 
         viewModelScope.launch {
-            val title =
-                if (currentSummary.doctorName.isNotBlank() && currentSummary.doctorName != "Unknown Doctor") {
-                    "${currentSummary.doctorName}'s report - Report"
-                } else {
+            val reason = currentSummary.reportReason.takeIf {
+                it.isNotBlank() && it.lowercase(Locale.getDefault()) != "not clearly visible"
+            }
+            val title = when {
+                !reason.isNullOrBlank() -> "Medical Report - $reason"
+                currentSummary.doctorName.isNotBlank() && currentSummary.doctorName != "Unknown Doctor" -> "${currentSummary.doctorName}'s report"
+                else -> {
                     val dateFormat =
                         SimpleDateFormat("MMM dd, yyyy 'at' hh:mm a", Locale.getDefault())
                     "Medical Report - ${dateFormat.format(Date())}"
                 }
+            }
 
             val saved = SavedMedicalReport(
                 summary = currentSummary,
