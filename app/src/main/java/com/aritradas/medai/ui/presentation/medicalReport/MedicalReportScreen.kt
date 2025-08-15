@@ -74,7 +74,6 @@ import kotlin.time.Duration.Companion.seconds
 @Composable
 fun MedicalReportScreen(
     navController: NavController,
-    modifier: Modifier = Modifier,
     viewModel: MedicalReportViewModel = hiltViewModel()
 ) {
     val scope = rememberCoroutineScope()
@@ -306,7 +305,9 @@ fun MedicalReportScreen(
                                 ReportCard(
                                     report = report,
                                     onClick = {
-                                        // TODO: add details navigation if desired
+                                        navController.navigate(
+                                            Screens.MedicalReportDetails(id = report.id)
+                                        )
                                     }
                                 )
                             }
