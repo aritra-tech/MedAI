@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -86,6 +88,8 @@ fun SignUpScreen(
     val keyboardController = LocalSoftwareKeyboardController.current
     var passwordVisible by remember { mutableStateOf(false) }
     val isLoading by authViewModel.isLoading.observeAsState(false)
+    val scrollState = rememberScrollState()
+
     val isSignUpButtonEnabled by remember {
         derivedStateOf {
             validateName(userName) && validateEmail(userEmail) && userPassword.isNotEmpty()
@@ -136,10 +140,11 @@ fun SignUpScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp, vertical = 20.dp)
                 .padding(innerPadding)
-                .windowInsetsPadding(WindowInsets.ime),
-            horizontalAlignment = Alignment.End,
+                .windowInsetsPadding(WindowInsets.ime)
+                .verticalScroll(scrollState)
+                .padding(horizontal = 16.dp, vertical = 20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
 
@@ -240,7 +245,7 @@ fun SignUpScreen(
                 enabled = !isLoading
             )
 
-            Spacer(Modifier.weight(1f))
+            Spacer(modifier = Modifier.weight(1f))
 
             Button(
                 onClick = {
@@ -286,7 +291,7 @@ fun SignUpScreen(
                 Text(
                     modifier = Modifier.clickable {
                         if (!isLoading) {
-                            navController.navigate(Screens.Login.route)
+                            navController.navigate(Screens.Login)
                         }
                     },
                     text = "Login",

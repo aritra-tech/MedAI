@@ -112,7 +112,7 @@ fun WelcomeScreen(
 
             OutlinedButton(
                 onClick = {
-                    navController.navigate(Screens.SignUp.route)
+                    navController.navigate(Screens.SignUp)
                 },
                 modifier = Modifier
                     .fillMaxWidth()

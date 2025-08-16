@@ -6,7 +6,6 @@ import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -19,8 +18,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -73,6 +74,7 @@ fun LoginScreen(
     navController: NavController,
     authViewModel: AuthViewModel = hiltViewModel()
 ) {
+    val scrollState = rememberScrollState()
     val scope = rememberCoroutineScope()
     val activity = LocalActivity.current
     var backPressedState by remember { mutableStateOf(false) }
@@ -102,8 +104,8 @@ fun LoginScreen(
     LaunchedEffect(loginSuccess) {
         loginSuccess?.let { success ->
             if (success) {
-                navController.navigate(Screens.Prescription.route) {
-                    popUpTo(Screens.Onboarding.route) { inclusive = true }
+                navController.navigate(Screens.Prescription) {
+                    popUpTo(Screens.Onboarding) { inclusive = true }
                 }
             }
         }
@@ -114,8 +116,10 @@ fun LoginScreen(
             activity?.finish()
         } else {
             backPressedState = true
-            Toast.makeText(context,
-                context.getString(R.string.press_back_again_to_exit), Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                context,
+                context.getString(R.string.press_back_again_to_exit), Toast.LENGTH_SHORT
+            ).show()
 
             scope.launch {
                 delay(2.seconds)
@@ -135,142 +139,142 @@ fun LoginScreen(
             )
         }
     ) { innerPadding ->
-        Box(modifier = Modifier.fillMaxSize()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp, vertical = 20.dp)
-                    .padding(innerPadding)
-                    .windowInsetsPadding(WindowInsets.ime),
-                horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.Top
-            ) {
 
-                OutlinedTextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    label = { Text("Email") },
-                    placeholder = { Text("Enter your email") },
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Email,
-                        imeAction = ImeAction.Next,
-                        autoCorrect = false
-                    ),
-                    keyboardActions = KeyboardActions(
-                        onNext = {
-                            focusManager.moveFocus(FocusDirection.Down)
-                        }
-                    ),
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !isLoading,
-                    isError = email.isNotEmpty() && !validateEmail(email),
-                    supportingText = if (email.isNotEmpty() && !validateEmail(email)) {
-                        { Text("Please enter a valid email address") }
-                    } else null
-                )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .windowInsetsPadding(WindowInsets.ime)
+                .verticalScroll(scrollState)
+            .padding(horizontal = 16.dp, vertical = 20.dp),
+            horizontalAlignment = Alignment.End,
+            verticalArrangement = Arrangement.Top
+        ) {
 
-                Spacer(modifier = Modifier.height(16.dp))
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Email") },
+                placeholder = { Text("Enter your email") },
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Email,
+                    imeAction = ImeAction.Next,
+                    autoCorrect = false
+                ),
+                keyboardActions = KeyboardActions(
+                    onNext = {
+                        focusManager.moveFocus(FocusDirection.Down)
+                    }
+                ),
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isLoading,
+                isError = email.isNotEmpty() && !validateEmail(email),
+                supportingText = if (email.isNotEmpty() && !validateEmail(email)) {
+                    { Text("Please enter a valid email address") }
+                } else null
+            )
 
-                OutlinedTextField(
-                    value = password,
-                    onValueChange = { password = it },
-                    label = { Text("Password") },
-                    placeholder = { Text("Enter your password") },
-                    trailingIcon = {
-                        IconButton(
-                            onClick = { passwordVisible = !passwordVisible },
-                            enabled = !isLoading
-                        ) {
-                            Icon(
-                                imageVector = if (passwordVisible) Icons.Default.VisibilityOff
-                                else Icons.Default.Visibility,
-                                contentDescription = if (passwordVisible) "Hide password"
-                                else "Show password"
-                            )
-                        }
-                    },
-                    visualTransformation = if (passwordVisible) VisualTransformation.None
-                    else PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Password,
-                        imeAction = ImeAction.Done
-                    ),
-                    keyboardActions = KeyboardActions(
-                        onDone = {
-                            if (!isLoading) {
-                                focusManager.clearFocus()
-                                keyboardController?.hide()
-                                authViewModel.logIn(email, password)
-                            }
-                        }
-                    ),
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !isLoading
-                )
+            Spacer(modifier = Modifier.height(16.dp))
 
-                AnimatedVisibility(!isKeyboardVisible) {
-                    TextButton(
-                        onClick = {
-                            navController.navigate(Screens.Forgot.route)
-                        },
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Password") },
+                placeholder = { Text("Enter your password") },
+                trailingIcon = {
+                    IconButton(
+                        onClick = { passwordVisible = !passwordVisible },
                         enabled = !isLoading
                     ) {
-                        Text(text = "Forgot Password?")
+                        Icon(
+                            imageVector = if (passwordVisible) Icons.Default.VisibilityOff
+                            else Icons.Default.Visibility,
+                            contentDescription = if (passwordVisible) "Hide password"
+                            else "Show password"
+                        )
                     }
-                }
+                },
+                visualTransformation = if (passwordVisible) VisualTransformation.None
+                else PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Password,
+                    imeAction = ImeAction.Done
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        if (!isLoading) {
+                            focusManager.clearFocus()
+                            keyboardController?.hide()
+                            authViewModel.logIn(email, password)
+                        }
+                    }
+                ),
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isLoading
+            )
 
-                Spacer(Modifier.weight(1f))
-
-                Button(
+            AnimatedVisibility(!isKeyboardVisible) {
+                TextButton(
                     onClick = {
-                        focusManager.clearFocus()
-                        authViewModel.logIn(email, password)
+                        navController.navigate(Screens.Forgot)
                     },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    shape = MaterialTheme.shapes.extraLarge,
-                    enabled = isSignInButtonEnable && !isLoading
+                    enabled = !isLoading
                 ) {
-                    if (isLoading) {
-                        LoadingIndicator(
-                            modifier = Modifier.size(20.dp)
-                        )
-                    } else {
-                        Text(
-                            text = "Sign In",
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                    }
+                    Text(text = "Forgot Password?")
                 }
+            }
 
-                Spacer(modifier = Modifier.height(15.dp))
+            Spacer(Modifier.weight(1f))
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
-                ) {
+            Button(
+                onClick = {
+                    focusManager.clearFocus()
+                    authViewModel.logIn(email, password)
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = MaterialTheme.shapes.extraLarge,
+                enabled = isSignInButtonEnable && !isLoading
+            ) {
+                if (isLoading) {
+                    LoadingIndicator(
+                        modifier = Modifier.size(20.dp)
+                    )
+                } else {
                     Text(
-                        text = "Don't have an account?",
+                        text = "Sign In",
                         style = MaterialTheme.typography.titleMedium
                     )
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    Text(
-                        modifier = Modifier.clickable {
-                            if (!isLoading) {
-                                navController.navigate(Screens.SignUp.route)
-                            }
-                        },
-                        text = "Create an Account",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = if (isLoading) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                        else MaterialTheme.colorScheme.primary
-                    )
                 }
+            }
+
+            Spacer(modifier = Modifier.height(15.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "Don't have an account?",
+                    style = MaterialTheme.typography.titleMedium
+                )
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Text(
+                    modifier = Modifier.clickable {
+                        if (!isLoading) {
+                            navController.navigate(Screens.SignUp)
+                        }
+                    },
+                    text = "Create an Account",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = if (isLoading) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                    else MaterialTheme.colorScheme.primary
+                )
             }
         }
     }

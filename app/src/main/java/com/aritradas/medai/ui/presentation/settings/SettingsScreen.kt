@@ -39,7 +39,6 @@ import com.aritradas.medai.MainActivity
 import com.aritradas.medai.R
 import com.aritradas.medai.navigation.Screens
 import com.aritradas.medai.ui.presentation.profile.components.SettingsCard
-import com.aritradas.medai.ui.presentation.profile.components.SettingsItemGroup
 import com.aritradas.medai.ui.presentation.settings.component.SwitchCard
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -50,7 +49,8 @@ fun SettingsScreen(
 ) {
 
     val context = LocalContext.current
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+    val scrollBehavior =
+        TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     val onLogOutComplete by settingsViewModel.onLogOutComplete.observeAsState(false)
     val onDeleteAccountComplete by settingsViewModel.onDeleteAccountComplete.observeAsState(false)
     val biometricAuthState by settingsViewModel.biometricAuthState.collectAsState()
@@ -58,7 +58,7 @@ fun SettingsScreen(
     var openDeleteAccountDialog by remember { mutableStateOf(false) }
 
     if (onLogOutComplete || onDeleteAccountComplete) {
-        navController.navigate(Screens.Onboarding.route)
+        navController.navigate(Screens.Onboarding)
     }
 
     when {
@@ -190,46 +190,43 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            SettingsItemGroup {
+            SwitchCard(
+                isFirstItem = true,
+                itemName = stringResource(R.string.biometric_unlock),
+                itemSubText = stringResource(R.string.use_biometric_to_unlock_the_app),
+                isChecked = biometricAuthState,
+                onChecked = {
+                    settingsViewModel.showBiometricPrompt(context as MainActivity)
+                }
+            )
 
-                SwitchCard(
-                    itemName = stringResource(R.string.biometric_unlock),
-                    itemSubText = stringResource(R.string.use_biometric_to_unlock_the_app),
-                    isChecked = biometricAuthState,
-                    onChecked = {
-                        settingsViewModel.showBiometricPrompt(context as MainActivity)
-                    }
-                )
-            }
 
             Text(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 16.dp, end = 18.dp, top = 18.dp),
+                    .fillMaxWidth(),
                 text = "Danger Zone",
             )
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-            SettingsItemGroup {
-                SettingsCard(
-                    itemName = "Logout",
-                    onClick = {
-                        openLogoutDialog = true
-                    }
-                )
-            }
+            SettingsCard(
+                isFirstItem = true,
+                itemName = "Logout",
+                onClick = {
+                    openLogoutDialog = true
+                }
+            )
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
-            SettingsItemGroup {
-                SettingsCard(
-                    itemName = "Delete Account",
-                    onClick = {
-                        openDeleteAccountDialog = true
-                    }
-                )
-            }
+            SettingsCard(
+                isLastItem = true,
+                itemName = "Delete Account",
+                onClick = {
+                    openDeleteAccountDialog = true
+                }
+            )
+
         }
     }
 }

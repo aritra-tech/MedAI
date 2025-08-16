@@ -10,16 +10,18 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavType.Companion.BoolType
-import androidx.navigation.NavType.Companion.StringType
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
+import androidx.navigation.toRoute
 import com.aritradas.medai.ui.presentation.auth.ForgotPasswordScreen
 import com.aritradas.medai.ui.presentation.auth.LoginScreen
 import com.aritradas.medai.ui.presentation.auth.SignUpScreen
+import com.aritradas.medai.ui.presentation.medicalReport.MedicalReportScreen
+import com.aritradas.medai.ui.presentation.medicalReportSummarize.MedicalReportSummarizeScreen
+import com.aritradas.medai.ui.presentation.medicalReportDetails.MedicalReportDetailsScreen
 import com.aritradas.medai.ui.presentation.onboarding.WelcomeScreen
 import com.aritradas.medai.ui.presentation.prescription.PrescriptionScreen
 import com.aritradas.medai.ui.presentation.prescriptionDetails.PrescriptionDetailsScreen
@@ -34,25 +36,28 @@ fun Navigation(splashViewModel: SplashViewModel) {
 
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
+    val currentDestination = navBackStackEntry?.destination
 
     val navigationDestination by splashViewModel.navigationDestination.collectAsState()
 
     LaunchedEffect(navigationDestination) {
         navigationDestination?.let { destination ->
             navController.navigate(destination) {
-                popUpTo("loading") { inclusive = true }
+                popUpTo<Screens.Loading> { inclusive = true }
             }
             splashViewModel.onNavigationComplete()
         }
     }
 
     val bottomBarScreens = listOf(
-        Screens.Prescription.route,
-        Screens.Profile.route
+        Screens.Prescription::class,
+        Screens.MedicalReportScreen::class,
+        Screens.Profile::class
     )
 
-    val showBottomBar = currentRoute in bottomBarScreens
+    val showBottomBar = bottomBarScreens.any { screenClass ->
+        currentDestination?.hasRoute(screenClass) == true
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -64,94 +69,98 @@ fun Navigation(splashViewModel: SplashViewModel) {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = "loading",
+            startDestination = Screens.Loading,
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable("loading") {
+            composable<Screens.Loading> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {}
             }
 
-            composable(Screens.Onboarding.route) {
-                WelcomeScreen(
-                    navController
-                )
+            composable<Screens.Onboarding> {
+                WelcomeScreen(navController)
             }
 
-            composable(Screens.Login.route) {
+            composable<Screens.Login> {
                 LoginScreen(navController)
             }
 
-            composable(Screens.SignUp.route) {
+            composable<Screens.SignUp> {
                 SignUpScreen(
                     navController,
                     onSignUp = {
-                        navController.navigate(Screens.Prescription.route)
+                        navController.navigate(Screens.Prescription)
                     }
                 )
             }
 
-            composable(Screens.Forgot.route) {
+            composable<Screens.Forgot> {
                 ForgotPasswordScreen()
             }
 
-            composable(Screens.Prescription.route) {
+            composable<Screens.Prescription> {
                 PrescriptionScreen(
                     navController = navController,
                     navigateToDetailsScreen = { id ->
-                        navController.navigate("${Screens.PrescriptionDetails.route}/$id")
+                        navController.navigate(Screens.PrescriptionDetails(id = id))
                     }
                 )
             }
 
-            composable(
-                route = "${Screens.PrescriptionDetails.route}/{id}",
-                arguments = listOf(navArgument("id") { type = StringType })
-            ) { backStackEntry ->
-                val id = backStackEntry.arguments?.getString("id") ?: ""
+            composable<Screens.PrescriptionDetails> { backStackEntry ->
+                val prescriptionDetails: Screens.PrescriptionDetails = backStackEntry.toRoute()
 
                 PrescriptionDetailsScreen(
                     navController = navController,
-                    prescriptionId = id,
+                    prescriptionId = prescriptionDetails.id,
                 )
             }
 
-            composable(
-                route = "${Screens.PrescriptionSummarize.route}?hasCameraPermission={hasCameraPermission}",
-                arguments = listOf(
-                    navArgument("hasCameraPermission") {
-                        type = BoolType
-                        defaultValue = false
-                    }
-                )
-            ) { backStackEntry ->
-                val hasCameraPermission =
-                    backStackEntry.arguments?.getBoolean("hasCameraPermission") ?: false
+            composable<Screens.PrescriptionSummarize> { backStackEntry ->
+                val prescriptionSummarize: Screens.PrescriptionSummarize = backStackEntry.toRoute()
 
                 PrescriptionSummarizeScreen(
                     navController = navController,
-                    hasCameraPermission = hasCameraPermission
-                )
-            }
-            
-            composable(Screens.Profile.route) {
-                ProfileScreen(
-                    navController = navController
-                )
-            }
-            
-            composable(Screens.Settings.route) {
-                SettingsScreen(
-                    navController = navController
+                    hasCameraPermission = prescriptionSummarize.hasCameraPermission
                 )
             }
 
-            composable(Screens.Help.route) {
-                HelpScreen(
-                    navController = navController
+            composable<Screens.MedicalReportScreen> {
+                MedicalReportScreen(
+                    navController = navController,
                 )
+            }
+
+            composable<Screens.MedicalReportSummarize> { backStackEntry ->
+
+                val medicalReportSummarize: Screens.MedicalReportSummarize = backStackEntry.toRoute()
+
+                MedicalReportSummarizeScreen(
+                    navController = navController,
+                    hasCameraPermission = medicalReportSummarize.hasCameraPermission
+                )
+            }
+
+            composable<Screens.MedicalReportDetails> { backStackEntry ->
+                val details: Screens.MedicalReportDetails = backStackEntry.toRoute()
+                MedicalReportDetailsScreen(
+                    navController = navController,
+                    reportId = details.id
+                )
+            }
+
+            composable<Screens.Profile> {
+                ProfileScreen(navController = navController)
+            }
+
+            composable<Screens.Settings> {
+                SettingsScreen(navController = navController)
+            }
+
+            composable<Screens.Help> {
+                HelpScreen(navController = navController)
             }
         }
     }

@@ -1,4 +1,4 @@
-package com.aritradas.medai.ui.presentation.prescriptionSummarize
+package com.aritradas.medai.ui.presentation.medicalReportSummarize
 
 import android.content.Intent
 import android.net.Uri
@@ -28,15 +28,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Flag
-import androidx.compose.material.icons.filled.MedicalServices
 import androidx.compose.material.icons.filled.Photo
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -61,7 +56,6 @@ import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -72,11 +66,9 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -86,9 +78,7 @@ import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.aritradas.medai.R
-import com.aritradas.medai.domain.model.DrugResult
-import com.aritradas.medai.domain.model.Medication
+import com.aritradas.medai.ui.presentation.prescriptionSummarize.DrugDetailSheetContent
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -96,27 +86,27 @@ import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun PrescriptionSummarizeScreen(
+fun MedicalReportSummarizeScreen(
     navController: NavController,
-    hasCameraPermission: Boolean = false,
-    prescriptionViewModel: PrescriptionSummarizeViewModel = hiltViewModel()
+    reportViewModel: MedicalReportSummarizeViewModel = hiltViewModel(),
+    hasCameraPermission: Boolean = false
 ) {
     val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
-    val uiState by prescriptionViewModel.uiState.collectAsState()
+    val uiState by reportViewModel.uiState.collectAsState()
 
     var showReportDialog by remember { mutableStateOf(false) }
     var showReportTypeDialog by remember { mutableStateOf(false) }
     var reportReason by remember { mutableStateOf("") }
     var showDialog by remember { mutableStateOf(false) }
     var showPermissionDialog by remember { mutableStateOf(false) }
-    val imageUris = remember { mutableStateListOf<Uri>() }
+    var imageUri by remember { mutableStateOf<Uri?>(null) }
     var cameraUri by remember { mutableStateOf<Uri?>(null) }
     var showBackWarningDialog by remember { mutableStateOf(false) }
     var showDrugDetailModal by remember { mutableStateOf(false) }
-    val drugDetail by prescriptionViewModel.drugDetail.collectAsState()
-    val isDrugLoading by prescriptionViewModel.isDrugLoading.collectAsState()
-    val drugDetailError by prescriptionViewModel.drugDetailError.collectAsState()
+    val drugDetail by reportViewModel.drugDetail.collectAsState()
+    val isDrugLoading by reportViewModel.isDrugLoading.collectAsState()
+    val drugDetailError by reportViewModel.drugDetailError.collectAsState()
 
     val createImageFile = {
         val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
@@ -129,9 +119,7 @@ fun PrescriptionSummarizeScreen(
         contract = ActivityResultContracts.TakePicture(),
         onResult = { success ->
             if (success) {
-                cameraUri?.let { uri ->
-                    if (imageUris.size < 2) imageUris.add(uri)
-                }
+                imageUri = cameraUri
             }
         }
     )
@@ -139,12 +127,12 @@ fun PrescriptionSummarizeScreen(
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
         onResult = { uri ->
-            if (uri != null && imageUris.size < 2) imageUris.add(uri)
+            imageUri = uri
         }
     )
 
     val handleTakePhoto = {
-        if (hasCameraPermission && imageUris.size < 2) {
+        if (hasCameraPermission) {
             val photoFile = createImageFile()
             val photoUri = FileProvider.getUriForFile(
                 context,
@@ -154,35 +142,34 @@ fun PrescriptionSummarizeScreen(
             cameraUri = photoUri
             cameraLauncher.launch(photoUri)
             showDialog = false
-        } else if (!hasCameraPermission) {
+        } else {
             showPermissionDialog = true
             showDialog = false
         }
     }
 
     val handleAddImage = {
-        if (imageUris.size < 2) {
-            galleryLauncher.launch(
-                androidx.activity.result.PickVisualMediaRequest(
-                    ActivityResultContracts.PickVisualMedia.ImageOnly
-                )
+        galleryLauncher.launch(
+            androidx.activity.result.PickVisualMediaRequest(
+                ActivityResultContracts.PickVisualMedia.ImageOnly
             )
-        }
+        )
         showDialog = false
     }
 
-    val handleRemoveImage = { uri: Uri ->
-        imageUris.remove(uri)
-        prescriptionViewModel.clearSummary()
+    val handleRemoveImage = {
+        imageUri = null
+        cameraUri = null
+        reportViewModel.clearSummary()
     }
 
     val handleSummarize = {
-        if (imageUris.isNotEmpty()) {
-            prescriptionViewModel.validateAndAnalyzePrescription(imageUris.first()) // legacy single-image usage; update ViewModel to handle multiple if needed
+        imageUri?.let { uri ->
+            reportViewModel.validateAndAnalyzeReport(uri)
         }
         Unit
     }
-    prescriptionViewModel.setOnSaveSuccessCallback {
+    reportViewModel.setOnSaveSuccessCallback {
         navController.popBackStack()
     }
 
@@ -191,8 +178,8 @@ fun PrescriptionSummarizeScreen(
     }
     val handleReportSubmit = {
         if (reportReason.isNotBlank()) {
-            prescriptionViewModel.updateReport(reportReason)
-            prescriptionViewModel.submitReport()
+            reportViewModel.updateReport(reportReason)
+            reportViewModel.submitReport()
             showReportDialog = false
             showReportTypeDialog = false
             Toast.makeText(context, "Report has been submitted", Toast.LENGTH_SHORT).show()
@@ -206,8 +193,8 @@ fun PrescriptionSummarizeScreen(
             showReportTypeDialog = false
             showReportDialog = true
         } else {
-            prescriptionViewModel.updateReport(reason)
-            prescriptionViewModel.submitReport()
+            reportViewModel.updateReport(reason)
+            reportViewModel.submitReport()
             showReportTypeDialog = false
             Toast.makeText(context, "Report has been submitted", Toast.LENGTH_SHORT).show()
         }
@@ -271,7 +258,7 @@ fun PrescriptionSummarizeScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Scan Prescription",
+                        text = "Scan Medical Report",
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -285,10 +272,9 @@ fun PrescriptionSummarizeScreen(
                     }
                 },
                 actions = {
-                    // Show save button only when summary is available
                     uiState.summary?.let {
                         IconButton(
-                            onClick = { prescriptionViewModel.savePrescription() },
+                            onClick = { reportViewModel.saveMedicalReport() },
                             enabled = !uiState.isSaving
                         ) {
                             if (uiState.isSaving) {
@@ -298,8 +284,8 @@ fun PrescriptionSummarizeScreen(
                                 )
                             } else {
                                 Icon(
-                                    imageVector = Icons.Default.Check,
-                                    contentDescription = "Save prescription",
+                                    imageVector = Icons.Filled.Check,
+                                    contentDescription = "Save report",
                                     tint = if (uiState.saveSuccess)
                                         MaterialTheme.colorScheme.primary
                                     else
@@ -327,7 +313,6 @@ fun PrescriptionSummarizeScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            // Image upload section
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -353,75 +338,36 @@ fun PrescriptionSummarizeScreen(
                     )
                 }
 
-                if (imageUris.isNotEmpty()) {
-                    Row(
+                if (imageUri != null) {
+                    Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
+                            .padding(8.dp)
                     ) {
-                        imageUris.forEach { uri ->
-                            Box(
-                                modifier = Modifier
-                                    .width(120.dp)
-                                    .height(240.dp)
-                                    .clip(RoundedCornerShape(20.dp))
-                                    .padding(end = 8.dp),
-                                contentAlignment = Alignment.TopEnd
-                            ) {
-                                AsyncImage(
-                                    model = uri,
-                                    contentDescription = "Selected prescription image",
-                                    modifier = Modifier
-                                        .fillMaxSize(),
-                                    contentScale = ContentScale.Crop
-                                )
-                                FloatingActionButton(
-                                    onClick = { handleRemoveImage(uri) },
-                                    modifier = Modifier
-                                        .padding(8.dp)
-                                        .size(32.dp),
-                                    containerColor = MaterialTheme.colorScheme.error
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Close,
-                                        contentDescription = "Remove image",
-                                        tint = MaterialTheme.colorScheme.onError,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                }
-                            }
-                        }
-                        if (imageUris.size < 2) {
-                            // Add Image Button/Card
-                            Box(
-                                modifier = Modifier
-                                    .width(120.dp)
-                                    .height(240.dp)
-                                    .clip(RoundedCornerShape(20.dp))
-                                    .clickable { showDialog = true }
-                                    .padding(end = 8.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.CameraAlt,
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        contentDescription = "Add image (camera or gallery)",
-                                        modifier = Modifier.size(40.dp)
-                                    )
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Text(
-                                        text = "Add Photo",
-                                        style = MaterialTheme.typography.labelMedium,
-                                        textAlign = TextAlign.Center,
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
-                                }
-                            }
+                        AsyncImage(
+                            model = imageUri,
+                            contentDescription = "Selected report image",
+                            modifier = Modifier
+                                .width(240.dp)
+                                .height(240.dp)
+                                .clip(RoundedCornerShape(20.dp)),
+                            contentScale = ContentScale.Crop
+                        )
+
+                        FloatingActionButton(
+                            onClick = handleRemoveImage,
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(8.dp)
+                                .size(32.dp),
+                            containerColor = MaterialTheme.colorScheme.error
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Remove image",
+                                tint = MaterialTheme.colorScheme.onError,
+                                modifier = Modifier.size(18.dp)
+                            )
                         }
                     }
                 } else {
@@ -431,7 +377,7 @@ fun PrescriptionSummarizeScreen(
                         modifier = Modifier.padding(16.dp)
                     ) {
                         Text(
-                            text = stringResource(R.string.upload_a_prescription),
+                            text = "Upload a medical report",
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center
@@ -440,7 +386,7 @@ fun PrescriptionSummarizeScreen(
                         Spacer(modifier = Modifier.height(16.dp))
 
                         Text(
-                            text = stringResource(R.string.take_a_photo_of_your_prescription_or_upload_an_existing_image),
+                            text = "Take a photo of your report or upload an existing image",
                             style = MaterialTheme.typography.bodyMedium,
                             textAlign = TextAlign.Center,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -471,7 +417,7 @@ fun PrescriptionSummarizeScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
-                enabled = imageUris.isNotEmpty() && !uiState.isLoading && !uiState.isValidating
+                enabled = imageUri != null && !uiState.isLoading && !uiState.isValidating
             ) {
                 when {
                     uiState.isValidating -> {
@@ -506,7 +452,6 @@ fun PrescriptionSummarizeScreen(
                 }
             }
 
-            // Display summary result
             uiState.summary?.let { summary ->
                 Spacer(modifier = Modifier.height(24.dp))
 
@@ -545,7 +490,6 @@ fun PrescriptionSummarizeScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Summary Card
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
@@ -556,7 +500,7 @@ fun PrescriptionSummarizeScreen(
                         modifier = Modifier.padding(16.dp)
                     ) {
                         Text(
-                            text = "Prescription Summary",
+                            text = "Report Summary",
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -573,49 +517,6 @@ fun PrescriptionSummarizeScreen(
                             Spacer(modifier = Modifier.height(16.dp))
                         }
 
-                        if (summary.medications.isNotEmpty()) {
-                            Text(
-                                text = "Medications:",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            summary.medications.forEach { medication ->
-                                MedicationCard(
-                                    medication = medication,
-                                    onClick = {
-                                        prescriptionViewModel.fetchDrugDetailByGenericName(
-                                            medication.name
-                                        )
-                                        showDrugDetailModal = true
-                                    }
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                            }
-                        }
-
-                        if (summary.stepsToCure.isNotEmpty()) {
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = "Steps to Get Cured:",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Column {
-                                summary.stepsToCure.forEach { step ->
-                                    Text(
-                                        text = "• $step",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.padding(bottom = 4.dp)
-                                    )
-                                }
-                            }
-                        }
 
                         if (summary.warnings.isNotEmpty()) {
                             Spacer(modifier = Modifier.height(16.dp))
@@ -643,29 +544,6 @@ fun PrescriptionSummarizeScreen(
                                 }
                             }
                         }
-
-                        if (summary.prescriptionReason.isNotEmpty()) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.Start
-                            ) {
-                                AssistChip(
-                                    modifier = Modifier.padding(vertical = 8.dp),
-                                    onClick = {},
-                                    label = {
-                                        Text(
-                                            text = summary.prescriptionReason,
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = MaterialTheme.colorScheme.onSurface
-                                        )
-                                    },
-                                    shape = RoundedCornerShape(50),
-                                    colors = AssistChipDefaults.assistChipColors(
-                                        containerColor = MaterialTheme.colorScheme.surface
-                                    )
-                                )
-                            }
-                        }
                     }
                 }
 
@@ -674,49 +552,45 @@ fun PrescriptionSummarizeScreen(
         }
     }
 
-    // Save error dialog
     uiState.saveError?.let { error ->
         AlertDialog(
-            onDismissRequest = { prescriptionViewModel.clearSaveStatus() },
+            onDismissRequest = { reportViewModel.clearSaveStatus() },
             title = { Text("Save Failed") },
             text = { Text(error) },
             confirmButton = {
-                TextButton(onClick = { prescriptionViewModel.clearSaveStatus() }) {
+                TextButton(onClick = { reportViewModel.clearSaveStatus() }) {
                     Text("OK")
                 }
             }
         )
     }
 
-    // Validation error dialog
     uiState.validationError?.let { error ->
         AlertDialog(
-            onDismissRequest = { prescriptionViewModel.clearValidationError() },
-            title = { Text("Invalid Prescription") },
+            onDismissRequest = { reportViewModel.clearValidationError() },
+            title = { Text("Invalid Report") },
             text = { Text(error) },
             confirmButton = {
-                TextButton(onClick = { prescriptionViewModel.clearValidationError() }) {
+                TextButton(onClick = { reportViewModel.clearValidationError() }) {
                     Text("OK")
                 }
             }
         )
     }
 
-    // Error dialog
     uiState.error?.let { error ->
         AlertDialog(
-            onDismissRequest = { prescriptionViewModel.clearError() },
+            onDismissRequest = { reportViewModel.clearError() },
             title = { Text("Error") },
             text = { Text(error) },
             confirmButton = {
-                TextButton(onClick = { prescriptionViewModel.clearError() }) {
+                TextButton(onClick = { reportViewModel.clearError() }) {
                     Text("OK")
                 }
             }
         )
     }
 
-    // Image picker dialog
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
@@ -763,7 +637,6 @@ fun PrescriptionSummarizeScreen(
         )
     }
 
-    // Permission dialog
     if (showPermissionDialog) {
         AlertDialog(
             onDismissRequest = { showPermissionDialog = false },
@@ -929,163 +802,5 @@ fun PrescriptionSummarizeScreen(
                 }
             }
         )
-    }
-}
-
-@Composable
-fun DrugDetailSheetContent(detail: DrugResult) {
-    Column(
-        modifier = Modifier
-            .padding(16.dp)
-            .verticalScroll(rememberScrollState())
-    ) {
-        // Medicine name
-        Text(
-            text = detail.medicineName.replaceFirstChar { it.uppercase() },
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // Uses section
-        DrugDetailSection(
-            title = "Uses",
-            content = detail.uses,
-            icon = Icons.Default.MedicalServices
-        )
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        // Benefits section
-        DrugDetailSection(
-            title = "Benefits",
-            content = detail.benefits,
-            icon = Icons.Default.CheckCircle
-        )
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        // Side effects section
-        DrugDetailSection(
-            title = "Side Effects",
-            content = detail.sideEffects,
-            icon = Icons.Default.Warning,
-            isWarning = true
-        )
-    }
-}
-
-@Composable
-private fun DrugDetailSection(
-    title: String,
-    content: List<String>,
-    icon: ImageVector,
-    isWarning: Boolean = false
-) {
-    Column(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = if (isWarning) {
-                    MaterialTheme.colorScheme.error
-                } else {
-                    MaterialTheme.colorScheme.primary
-                },
-                modifier = Modifier.size(20.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = if (isWarning) {
-                    MaterialTheme.colorScheme.error
-                } else {
-                    MaterialTheme.colorScheme.onSurface
-                }
-            )
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(
-                containerColor = if (isWarning) {
-                    MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.1f)
-                } else {
-                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-                }
-            )
-        ) {
-            content.forEach { item ->
-                Text(
-                    modifier = Modifier.padding(8.dp),
-                    text = "• $item",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun MedicationCard(
-    medication: Medication,
-    onClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .clickable { onClick() },
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp)
-        ) {
-            Text(
-                text = medication.name,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-
-            if (medication.dosage.isNotEmpty()) {
-                Text(
-                    text = "Dosage: ${medication.dosage}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            if (medication.frequency.isNotEmpty()) {
-                Text(
-                    text = "Frequency: ${medication.frequency}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            if (medication.duration.isNotEmpty()) {
-                Text(
-                    text = "Duration: ${medication.duration}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
     }
 }

@@ -1,0 +1,20 @@
+package com.aritradas.medai.domain.model
+
+import com.google.gson.annotations.SerializedName
+
+data class GeminiMedicalReportMedication(
+    @SerializedName("name") val name: String,
+    @SerializedName("dosage") val dosage: String,
+    @SerializedName("frequency") val frequency: String,
+    @SerializedName("duration") val duration: String
+)
+
+data class GeminiMedicalReportResponse(
+    @SerializedName("doctorName") val doctorName: String = "",
+    @SerializedName("medications") val medications: List<GeminiMedicalReportMedication> = emptyList(),
+    @SerializedName("dosageInstructions") val dosageInstructions: List<String> = emptyList(),
+    @SerializedName("summary") val summary: String = "",
+    @SerializedName("warnings") val warnings: List<String> = emptyList(),
+    @SerializedName("reportReason") val reportReason: String = "",
+    @SerializedName("stepsToCure") val stepsToCure: List<String> = emptyList()
+)
