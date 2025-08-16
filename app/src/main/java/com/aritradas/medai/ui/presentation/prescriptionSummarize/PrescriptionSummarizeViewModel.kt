@@ -49,26 +49,27 @@ class PrescriptionSummarizeViewModel @Inject constructor(
         onSaveSuccess = callback
     }
 
-    fun validateAndAnalyzePrescription(imageUri: Uri) {
+    fun validateAndAnalyzePrescription(imageUris: List<Uri>) {
         viewModelScope.launch {
-            // First do basic image validation
-            when (val basicValidation = ImageValidator.validateImageBasics(context, imageUri)) {
-                is ValidationResult.Invalid -> {
-                    _uiState.value = _uiState.value.copy(
-                        validationError = basicValidation.message
-                    )
-                    return@launch
-                }
-                is ValidationResult.Warning -> {
-                    // Continue with AI validation but could show warning
-                    // For now, we'll proceed
-                }
-                ValidationResult.Valid -> {
-                    // Continue with AI validation
+            // Validate all images first
+            for (imageUri in imageUris) {
+                when (val basicValidation = ImageValidator.validateImageBasics(context, imageUri)) {
+                    is ValidationResult.Invalid -> {
+                        _uiState.value = _uiState.value.copy(
+                            validationError = basicValidation.message
+                        )
+                        return@launch
+                    }
+
+                    is ValidationResult.Warning -> {
+                        // Show warning but proceed
+                    }
+
+                    ValidationResult.Valid -> {}
                 }
             }
 
-            // Then validate with AI
+            // Validate with AI
             _uiState.value = _uiState.value.copy(
                 isValidating = true,
                 error = null,
@@ -76,20 +77,21 @@ class PrescriptionSummarizeViewModel @Inject constructor(
                 isValidPrescription = null
             )
 
-            when (val validationResult = prescriptionRepository.validatePrescription(imageUri)) {
-                is Resource.Success -> {
+            val validationResult = prescriptionRepository.validatePrescription(imageUris)
+            when (validationResult) {
+                is com.aritradas.medai.utils.Resource.Success -> {
                     if (validationResult.data == true) {
                         _uiState.value = _uiState.value.copy(
                             isValidating = false,
                             isValidPrescription = true
                         )
-                        // If valid, proceed with analysis
-                        analyzePrescription(imageUri)
+                        // Analyze all images and merge their summaries
+                        analyzePrescription(imageUris)
                     } else {
                         _uiState.value = _uiState.value.copy(
                             isValidating = false,
                             isValidPrescription = false,
-                            validationError = "This image does not appear to be a valid medical prescription. Please upload a clear image of a doctor's prescription."
+                            validationError = "One or more images are not valid prescriptions."
                         )
                     }
                 }
@@ -100,22 +102,20 @@ class PrescriptionSummarizeViewModel @Inject constructor(
                     )
                 }
                 is Resource.Loading -> {
-                    _uiState.value = _uiState.value.copy(
-                        isValidating = true
-                    )
+                    _uiState.value = _uiState.value.copy(isValidating = true)
                 }
             }
         }
     }
 
-    private fun analyzePrescription(imageUri: Uri) {
+    private fun analyzePrescription(imageUris: List<Uri>) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(
                 isLoading = true,
                 error = null
             )
-
-            when (val result = prescriptionRepository.summarizePrescription(imageUri)) {
+            val result = prescriptionRepository.summarizePrescription(imageUris)
+            when (result) {
                 is Resource.Success -> {
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
@@ -129,9 +129,7 @@ class PrescriptionSummarizeViewModel @Inject constructor(
                     )
                 }
                 is Resource.Loading -> {
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = true
-                    )
+                    _uiState.value = _uiState.value.copy(isLoading = true)
                 }
             }
         }

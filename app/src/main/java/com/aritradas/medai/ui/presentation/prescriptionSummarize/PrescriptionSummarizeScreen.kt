@@ -178,7 +178,7 @@ fun PrescriptionSummarizeScreen(
 
     val handleSummarize = {
         if (imageUris.isNotEmpty()) {
-            prescriptionViewModel.validateAndAnalyzePrescription(imageUris.first()) // legacy single-image usage; update ViewModel to handle multiple if needed
+            prescriptionViewModel.validateAndAnalyzePrescription(imageUris)
         }
         Unit
     }
