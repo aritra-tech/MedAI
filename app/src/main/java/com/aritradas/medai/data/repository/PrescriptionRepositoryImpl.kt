@@ -41,6 +41,7 @@ class PrescriptionRepositoryImpl @Inject constructor(
     private val firestore = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
 
+    // Support single-image validation for backward compatibility
     override suspend fun validatePrescription(imageUri: Uri): Resource<Boolean> {
         return withContext(Dispatchers.IO) {
             try {
@@ -85,6 +86,24 @@ class PrescriptionRepositoryImpl @Inject constructor(
         }
     }
 
+    // Support mult-image validation
+    override suspend fun validatePrescription(imageUris: List<Uri>): Resource<Boolean> {
+        return withContext(Dispatchers.IO) {
+            try {
+                for (uri in imageUris) {
+                    val result = validatePrescription(uri)
+                    if (result is Resource.Error || (result is Resource.Success && result.data == false)) {
+                        return@withContext result // return first error or first invalid
+                    }
+                }
+                Resource.Success(true)
+            } catch (e: Exception) {
+                Resource.Error("Failed to validate multiple images: ${e.message}")
+            }
+        }
+    }
+
+    // Support single-image summarization for backward compatibility
     override suspend fun summarizePrescription(imageUri: Uri): Resource<PrescriptionSummary> {
         return withContext(Dispatchers.IO) {
             try {
@@ -160,6 +179,32 @@ class PrescriptionRepositoryImpl @Inject constructor(
                 Resource.Success(summary)
             } catch (e: Exception) {
                 Resource.Error("Failed to analyze prescription: ${e.message}")
+            }
+        }
+    }
+
+    // Support mult-image summarization
+    override suspend fun summarizePrescription(imageUris: List<Uri>): Resource<PrescriptionSummary> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val summaries = mutableListOf<PrescriptionSummary>()
+                for (uri in imageUris) {
+                    val res = summarizePrescription(uri)
+                    when (res) {
+                        is Resource.Success -> res.data?.let { summaries.add(it) }
+                        is Resource.Error -> return@withContext Resource.Error("Error summarizing image: ${res.message}")
+                        is Resource.Loading -> {} // Should not occur in batch
+                    }
+                }
+                // Merge logic for combining summaries
+                if (summaries.isEmpty()) {
+                    return@withContext Resource.Error("No summary generated from images")
+                }
+                // Helper to merge all summaries into one
+                val merged = mergeSummaries(summaries)
+                Resource.Success(merged)
+            } catch (e: Exception) {
+                Resource.Error("Failed to summarize multiple images: ${e.message}")
             }
         }
     }
@@ -480,5 +525,21 @@ class PrescriptionRepositoryImpl @Inject constructor(
         return instructions.ifEmpty {
             listOf("Follow the instructions on the prescription")
         }
+    }
+
+    // Merge logic: takes a list and combines all fields (lists concatenated, string summaries joined, etc.)
+    private fun mergeSummaries(summaries: List<PrescriptionSummary>): PrescriptionSummary {
+        return PrescriptionSummary(
+            doctorName = summaries.map { it.doctorName }.filter { it.isNotBlank() }.distinct()
+                .joinToString(", "),
+            medications = summaries.flatMap { it.medications },
+            dosageInstructions = summaries.flatMap { it.dosageInstructions }.distinct(),
+            summary = summaries.joinToString("\n\n") { it.summary },
+            warnings = summaries.flatMap { it.warnings }.distinct(),
+            prescriptionReason = summaries.map { it.prescriptionReason }.filter { it.isNotBlank() }
+                .distinct().joinToString(", "),
+            report = summaries.map { it.report }.filter { it.isNotBlank() }.joinToString("\n"),
+            stepsToCure = summaries.flatMap { it.stepsToCure }.distinct()
+        )
     }
 }

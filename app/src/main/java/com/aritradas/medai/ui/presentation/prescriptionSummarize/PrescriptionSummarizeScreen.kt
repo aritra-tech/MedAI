@@ -61,6 +61,7 @@ import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -109,7 +110,7 @@ fun PrescriptionSummarizeScreen(
     var reportReason by remember { mutableStateOf("") }
     var showDialog by remember { mutableStateOf(false) }
     var showPermissionDialog by remember { mutableStateOf(false) }
-    var imageUri by remember { mutableStateOf<Uri?>(null) }
+    val imageUris = remember { mutableStateListOf<Uri>() }
     var cameraUri by remember { mutableStateOf<Uri?>(null) }
     var showBackWarningDialog by remember { mutableStateOf(false) }
     var showDrugDetailModal by remember { mutableStateOf(false) }
@@ -128,7 +129,9 @@ fun PrescriptionSummarizeScreen(
         contract = ActivityResultContracts.TakePicture(),
         onResult = { success ->
             if (success) {
-                imageUri = cameraUri
+                cameraUri?.let { uri ->
+                    if (imageUris.size < 2) imageUris.add(uri)
+                }
             }
         }
     )
@@ -136,12 +139,12 @@ fun PrescriptionSummarizeScreen(
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
         onResult = { uri ->
-            imageUri = uri
+            if (uri != null && imageUris.size < 2) imageUris.add(uri)
         }
     )
 
     val handleTakePhoto = {
-        if (hasCameraPermission) {
+        if (hasCameraPermission && imageUris.size < 2) {
             val photoFile = createImageFile()
             val photoUri = FileProvider.getUriForFile(
                 context,
@@ -151,30 +154,31 @@ fun PrescriptionSummarizeScreen(
             cameraUri = photoUri
             cameraLauncher.launch(photoUri)
             showDialog = false
-        } else {
+        } else if (!hasCameraPermission) {
             showPermissionDialog = true
             showDialog = false
         }
     }
 
     val handleAddImage = {
-        galleryLauncher.launch(
-            androidx.activity.result.PickVisualMediaRequest(
-                ActivityResultContracts.PickVisualMedia.ImageOnly
+        if (imageUris.size < 2) {
+            galleryLauncher.launch(
+                androidx.activity.result.PickVisualMediaRequest(
+                    ActivityResultContracts.PickVisualMedia.ImageOnly
+                )
             )
-        )
+        }
         showDialog = false
     }
 
-    val handleRemoveImage = {
-        imageUri = null
-        cameraUri = null
+    val handleRemoveImage = { uri: Uri ->
+        imageUris.remove(uri)
         prescriptionViewModel.clearSummary()
     }
 
     val handleSummarize = {
-        imageUri?.let { uri ->
-            prescriptionViewModel.validateAndAnalyzePrescription(uri)
+        if (imageUris.isNotEmpty()) {
+            prescriptionViewModel.validateAndAnalyzePrescription(imageUris)
         }
         Unit
     }
@@ -349,36 +353,75 @@ fun PrescriptionSummarizeScreen(
                     )
                 }
 
-                if (imageUri != null) {
-                    Box(
+                if (imageUris.isNotEmpty()) {
+                    Row(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(8.dp)
+                            .padding(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
                     ) {
-                        AsyncImage(
-                            model = imageUri,
-                            contentDescription = "Selected prescription image",
-                            modifier = Modifier
-                                .width(240.dp)
-                                .height(240.dp)
-                                .clip(RoundedCornerShape(20.dp)),
-                            contentScale = ContentScale.Crop
-                        )
-
-                        FloatingActionButton(
-                            onClick = handleRemoveImage,
-                            modifier = Modifier
-                                .align(Alignment.TopEnd)
-                                .padding(8.dp)
-                                .size(32.dp),
-                            containerColor = MaterialTheme.colorScheme.error
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = "Remove image",
-                                tint = MaterialTheme.colorScheme.onError,
-                                modifier = Modifier.size(18.dp)
-                            )
+                        imageUris.forEach { uri ->
+                            Box(
+                                modifier = Modifier
+                                    .width(120.dp)
+                                    .height(240.dp)
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .padding(end = 8.dp),
+                                contentAlignment = Alignment.TopEnd
+                            ) {
+                                AsyncImage(
+                                    model = uri,
+                                    contentDescription = "Selected prescription image",
+                                    modifier = Modifier
+                                        .fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                                FloatingActionButton(
+                                    onClick = { handleRemoveImage(uri) },
+                                    modifier = Modifier
+                                        .padding(8.dp)
+                                        .size(32.dp),
+                                    containerColor = MaterialTheme.colorScheme.error
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Close,
+                                        contentDescription = "Remove image",
+                                        tint = MaterialTheme.colorScheme.onError,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            }
+                        }
+                        if (imageUris.size < 2) {
+                            // Add Image Button/Card
+                            Box(
+                                modifier = Modifier
+                                    .width(120.dp)
+                                    .height(240.dp)
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .clickable { showDialog = true }
+                                    .padding(end = 8.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.CameraAlt,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        contentDescription = "Add image (camera or gallery)",
+                                        modifier = Modifier.size(40.dp)
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        text = "Add Photo",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        textAlign = TextAlign.Center,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
                         }
                     }
                 } else {
@@ -428,7 +471,7 @@ fun PrescriptionSummarizeScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
-                enabled = imageUri != null && !uiState.isLoading && !uiState.isValidating
+                enabled = imageUris.isNotEmpty() && !uiState.isLoading && !uiState.isValidating
             ) {
                 when {
                     uiState.isValidating -> {
