@@ -1,6 +1,7 @@
 package com.aritradas.medai.ui.presentation.profile
 
 import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
@@ -18,12 +19,19 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Help
+import androidx.compose.material.icons.automirrored.outlined.Message
 import androidx.compose.material.icons.outlined.RateReview
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -49,6 +57,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.seconds
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     navController: NavController,
@@ -60,6 +69,94 @@ fun ProfileScreen(
     val context = LocalContext.current
     val userData by viewModel.userData.collectAsState()
     var backPressedState by remember { mutableStateOf(false) }
+    var showBottomSheet by remember { mutableStateOf(false) }
+    val bottomSheetState = rememberModalBottomSheetState()
+
+    var featureName by remember { mutableStateOf("") }
+    var featureEmail by remember { mutableStateOf("") }
+    var featureDetail by remember { mutableStateOf("") }
+
+    LaunchedEffect(showBottomSheet) {
+        if (showBottomSheet && featureName.isBlank()) {
+            featureName = userData?.username ?: ""
+        }
+    }
+
+    if (showBottomSheet) {
+        ModalBottomSheet(
+            onDismissRequest = {
+                showBottomSheet = false
+                featureName = ""
+                featureEmail = ""
+                featureDetail = ""
+            },
+            sheetState = bottomSheetState
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+
+                Text(text = "Feature Request", style = MaterialTheme.typography.titleLarge)
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    text = "Your feedback helps us improve MedAI and prioritize what matters most to users!",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                OutlinedTextField(
+                    value = featureName,
+                    onValueChange = { featureName = it },
+                    label = { Text("Name") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = featureEmail,
+                    onValueChange = { featureEmail = it },
+                    label = { Text("Email") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = featureDetail,
+                    onValueChange = { featureDetail = it },
+                    label = { Text("Describe your feature/request") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Button(onClick = {
+                    val intent = Intent(Intent.ACTION_SENDTO).apply {
+                        data = Uri.parse("mailto:medai.summarizer@gmail.com")
+                        putExtra(
+                            Intent.EXTRA_SUBJECT,
+                            "Feature Request - MedAI"
+                        )
+                        putExtra(
+                            Intent.EXTRA_TEXT,
+                            "Name: $featureName\nEmail: $featureEmail\nFeature Request:\n$featureDetail"
+                        )
+                    }
+                    context.startActivity(intent)
+                    showBottomSheet = false
+                    featureName = ""
+                    featureEmail = ""
+                    featureDetail = ""
+                }, modifier = Modifier.fillMaxWidth()) {
+                    Text("Submit")
+                }
+            }
+        }
+    }
 
     BackHandler {
         if (backPressedState) {
@@ -110,7 +207,7 @@ fun ProfileScreen(
                         val initials = userData?.username?.let { getInitials(it) } ?: ""
                         Text(
                             text = initials,
-                            style = MaterialTheme.typography.titleLarge.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            style = MaterialTheme.typography.titleLarge
                         )
                     }
 
@@ -168,6 +265,17 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(2.dp))
 
+            SettingsCard(
+                itemName = "Feature Request",
+                itemSubText = "We'd love to hear from you!",
+                iconVector = Icons.AutoMirrored.Outlined.Message,
+                onClick = {
+                    showBottomSheet = true
+                }
+            )
+
+            Spacer(modifier = Modifier.height(2.dp))
+            
             SettingsCard(
                 isLastItem = true,
                 itemName = stringResource(R.string.invite_friends),

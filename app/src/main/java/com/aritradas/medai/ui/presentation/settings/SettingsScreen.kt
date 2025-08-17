@@ -201,6 +201,8 @@ fun SettingsScreen(
             )
 
 
+            Spacer(modifier = Modifier.height(10.dp))
+
             Text(
                 modifier = Modifier
                     .fillMaxWidth(),

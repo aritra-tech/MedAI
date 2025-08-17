@@ -69,20 +69,8 @@ fun HelpScreen(
                 .padding(paddingValues)
                 .padding(horizontal = 16.dp),
         ) {
-
             SettingsCard(
                 isFirstItem = true,
-                itemName = stringResource(R.string.send_feedback),
-                onClick = {
-                    val openURL = Intent(Intent.ACTION_VIEW)
-                    openURL.data = context.resources.getString(R.string.mailTo).toUri()
-                    context.startActivity(openURL)
-                }
-            )
-
-            Spacer(modifier = Modifier.height(2.dp))
-
-            SettingsCard(
                 itemName = stringResource(R.string.terms_conditions),
                 onClick = {
                     val intent = Intent(Intent.ACTION_VIEW)
