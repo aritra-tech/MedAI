@@ -13,10 +13,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -90,6 +89,8 @@ fun WelcomeScreen(
                 contentScale = ContentScale.Fit
             )
 
+            Spacer(modifier = Modifier.weight(1f))
+
             Text(
                 text = stringResource(R.string.welcome_to_medai),
                 style = MaterialTheme.typography.displaySmall.copy(
@@ -108,9 +109,9 @@ fun WelcomeScreen(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
             )
 
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            OutlinedButton(
+            FilledTonalButton(
                 onClick = {
                     navController.navigate(Screens.SignUp)
                 },
@@ -118,12 +119,9 @@ fun WelcomeScreen(
                     .fillMaxWidth()
                     .height(56.dp),
                 shape = MaterialTheme.shapes.medium,
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                )
             ) {
                 Text(
-                    text = "Create an account",
+                    text = "Get Started",
                     style = MaterialTheme.typography.titleMedium
                 )
             }
