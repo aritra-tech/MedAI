@@ -62,6 +62,7 @@ import com.aritradas.medai.R
 import com.aritradas.medai.navigation.Screens
 import com.aritradas.medai.utils.UtilsKt.validateEmail
 import com.aritradas.medai.utils.UtilsKt.validateName
+import com.aritradas.medai.utils.UtilsKt.validatePassword
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -89,10 +90,34 @@ fun SignUpScreen(
     var passwordVisible by remember { mutableStateOf(false) }
     val isLoading by authViewModel.isLoading.observeAsState(false)
     val scrollState = rememberScrollState()
+    var userNameTouched by remember { mutableStateOf(false) }
+    var userEmailTouched by remember { mutableStateOf(false) }
+    var userPasswordTouched by remember { mutableStateOf(false) }
+
+
+
+    val userNameError: String? = when {
+        !userNameTouched -> null
+        userName.isEmpty() -> "Name is required."
+        !validateName(userName) -> "Please enter a valid name (letters only)."
+        else -> null
+    }
+    val userEmailError: String? = when {
+        !userEmailTouched -> null
+        userEmail.isEmpty() -> "Email is required."
+        !validateEmail(userEmail) -> "Please enter a valid email address."
+        else -> null
+    }
+    val userPasswordError: String? = when {
+        !userPasswordTouched -> null
+        userPassword.isEmpty() -> "Password is required."
+        !validatePassword(userPassword) -> "Password must be at least 8 characters and contain both letters and numbers."
+        else -> null
+    }
 
     val isSignUpButtonEnabled by remember {
         derivedStateOf {
-            validateName(userName) && validateEmail(userEmail) && userPassword.isNotEmpty()
+            validateName(userName) && validateEmail(userEmail) && validatePassword(userPassword) && !isLoading
         }
     }
 
@@ -150,7 +175,10 @@ fun SignUpScreen(
 
             OutlinedTextField(
                 value = userName,
-                onValueChange = { userName = it },
+                onValueChange = {
+                    userName = it
+                    if (!userNameTouched) userNameTouched = true
+                },
                 label = { Text("Name") },
                 placeholder = { Text("Enter your Name") },
                 keyboardOptions = KeyboardOptions(
@@ -166,17 +194,25 @@ fun SignUpScreen(
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !isLoading,
-                isError = userName.isNotEmpty() && !validateName(userName),
-                supportingText = if (userName.isNotEmpty() && !validateName(userName)) {
-                    { Text("Please enter a valid name") }
-                } else null
+                isError = userNameError != null,
+                supportingText = userNameError?.let {
+                    {
+                        Text(
+                            it,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
             OutlinedTextField(
                 value = userEmail,
-                onValueChange = { userEmail = it },
+                onValueChange = {
+                    userEmail = it
+                    if (!userEmailTouched) userEmailTouched = true
+                },
                 label = { Text("Email") },
                 placeholder = { Text("Enter your email") },
                 keyboardOptions = KeyboardOptions(
@@ -192,17 +228,25 @@ fun SignUpScreen(
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !isLoading,
-                isError = userEmail.isNotEmpty() && !validateEmail(userEmail),
-                supportingText = if (userEmail.isNotEmpty() && !validateEmail(userEmail)) {
-                    { Text("Please enter a valid email address") }
-                } else null
+                isError = userEmailError != null,
+                supportingText = userEmailError?.let {
+                    {
+                        Text(
+                            it,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
             OutlinedTextField(
                 value = userPassword,
-                onValueChange = { userPassword = it },
+                onValueChange = {
+                    userPassword = it
+                    if (!userPasswordTouched) userPasswordTouched = true
+                },
                 label = { Text("Password") },
                 placeholder = { Text("Enter your password") },
                 trailingIcon = {
@@ -226,7 +270,8 @@ fun SignUpScreen(
                 ),
                 keyboardActions = KeyboardActions(
                     onDone = {
-                        if (!isLoading && isSignUpButtonEnabled) {
+                        userPasswordTouched = true
+                        if (isSignUpButtonEnabled) {
                             focusManager.clearFocus()
                             keyboardController?.hide()
                             authViewModel.signUp(
@@ -242,28 +287,42 @@ fun SignUpScreen(
                 ),
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
-                enabled = !isLoading
+                enabled = !isLoading,
+                isError = userPasswordError != null,
+                supportingText = userPasswordError?.let {
+                    {
+                        Text(
+                            it,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
             )
 
             Spacer(modifier = Modifier.weight(1f))
 
             Button(
                 onClick = {
+                    userNameTouched = true
+                    userEmailTouched = true
+                    userPasswordTouched = true
                     focusManager.clearFocus()
-                    authViewModel.signUp(
-                        userName,
-                        userEmail,
-                        userPassword,
-                        onSignedUp = { signUpUser ->
-                            onSignUp(signUpUser)
-                        }
-                    )
+                    if (isSignUpButtonEnabled) {
+                        authViewModel.signUp(
+                            userName,
+                            userEmail,
+                            userPassword,
+                            onSignedUp = { signUpUser ->
+                                onSignUp(signUpUser)
+                            }
+                        )
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
                 shape = MaterialTheme.shapes.extraLarge,
-                enabled = isSignUpButtonEnabled && !isLoading
+                enabled = isSignUpButtonEnabled
             ) {
                 if (isLoading) {
                     LoadingIndicator(
