@@ -20,8 +20,8 @@ class SplashViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    private val _navigationDestination = MutableStateFlow<String?>(null)
-    val navigationDestination: StateFlow<String?> = _navigationDestination.asStateFlow()
+    private val _navigationDestination = MutableStateFlow<Screens?>(null)
+    val navigationDestination: StateFlow<Screens?> = _navigationDestination.asStateFlow()
 
     init {
         checkUserAuthAndNavigate()
@@ -33,9 +33,9 @@ class SplashViewModel @Inject constructor(
             delay(1500L)
 
             val destination = if (isUserSignedIn()) {
-                Screens.Prescription.route
+                Screens.Prescription
             } else {
-                Screens.Onboarding.route
+                Screens.Onboarding
             }
 
             _navigationDestination.value = destination

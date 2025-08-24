@@ -58,7 +58,7 @@ class AppBioMetricManager @Inject constructor(@ApplicationContext appContext: Co
 
         val promptInfo = BiometricPrompt.PromptInfo.Builder()
             .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG)
-            .setTitle("Unlock UnCrack")
+            .setTitle("Unlock MedAI")
             .setSubtitle("Confirm biometric to get logged in")
             .setNegativeButtonText("Cancel")
             .build()

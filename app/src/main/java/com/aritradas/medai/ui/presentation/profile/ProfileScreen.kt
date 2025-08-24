@@ -1,6 +1,7 @@
 package com.aritradas.medai.ui.presentation.profile
 
 import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
@@ -18,13 +19,19 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Help
+import androidx.compose.material.icons.automirrored.outlined.Message
 import androidx.compose.material.icons.outlined.RateReview
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,6 +42,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -43,13 +51,13 @@ import com.aritradas.medai.BuildConfig
 import com.aritradas.medai.R
 import com.aritradas.medai.navigation.Screens
 import com.aritradas.medai.ui.presentation.profile.components.SettingsCard
-import com.aritradas.medai.ui.presentation.profile.components.SettingsItemGroup
 import com.aritradas.medai.utils.Constants
 import com.aritradas.medai.utils.UtilsKt.getInitials
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.seconds
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     navController: NavController,
@@ -61,14 +69,104 @@ fun ProfileScreen(
     val context = LocalContext.current
     val userData by viewModel.userData.collectAsState()
     var backPressedState by remember { mutableStateOf(false) }
+    var showBottomSheet by remember { mutableStateOf(false) }
+    val bottomSheetState = rememberModalBottomSheetState()
+
+    var featureName by remember { mutableStateOf("") }
+    var featureEmail by remember { mutableStateOf("") }
+    var featureDetail by remember { mutableStateOf("") }
+
+    LaunchedEffect(showBottomSheet) {
+        if (showBottomSheet && featureName.isBlank()) {
+            featureName = userData?.username ?: ""
+        }
+    }
+
+    if (showBottomSheet) {
+        ModalBottomSheet(
+            onDismissRequest = {
+                showBottomSheet = false
+                featureName = ""
+                featureEmail = ""
+                featureDetail = ""
+            },
+            sheetState = bottomSheetState
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+
+                Text(text = "Feature Request", style = MaterialTheme.typography.titleLarge)
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    text = "Your feedback helps us improve MedAI and prioritize what matters most to users!",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                OutlinedTextField(
+                    value = featureName,
+                    onValueChange = { featureName = it },
+                    label = { Text("Name") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = featureEmail,
+                    onValueChange = { featureEmail = it },
+                    label = { Text("Email") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = featureDetail,
+                    onValueChange = { featureDetail = it },
+                    label = { Text("Describe your feature/request") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Button(onClick = {
+                    val intent = Intent(Intent.ACTION_SENDTO).apply {
+                        data = Uri.parse("mailto:medai.summarizer@gmail.com")
+                        putExtra(
+                            Intent.EXTRA_SUBJECT,
+                            "Feature Request - MedAI"
+                        )
+                        putExtra(
+                            Intent.EXTRA_TEXT,
+                            "Name: $featureName\nEmail: $featureEmail\nFeature Request:\n$featureDetail"
+                        )
+                    }
+                    context.startActivity(intent)
+                    showBottomSheet = false
+                    featureName = ""
+                    featureEmail = ""
+                    featureDetail = ""
+                }, modifier = Modifier.fillMaxWidth()) {
+                    Text("Submit")
+                }
+            }
+        }
+    }
 
     BackHandler {
         if (backPressedState) {
             activity?.finish()
         } else {
             backPressedState = true
-            Toast.makeText(context,
-                context.getString(R.string.press_back_again_to_exit), Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                context,
+                context.getString(R.string.press_back_again_to_exit), Toast.LENGTH_SHORT
+            ).show()
 
             scope.launch {
                 delay(2.seconds)
@@ -109,7 +207,7 @@ fun ProfileScreen(
                         val initials = userData?.username?.let { getInitials(it) } ?: ""
                         Text(
                             text = initials,
-                            style = MaterialTheme.typography.titleLarge.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            style = MaterialTheme.typography.titleLarge
                         )
                     }
 
@@ -126,61 +224,73 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            SettingsItemGroup {
-                SettingsCard(
-                    itemName = "Settings",
-                    iconVector = Icons.Outlined.Settings,
-                    onClick = {
-                        navController.navigate(Screens.Settings.route)
-                    }
-                )
 
-                HorizontalDivider(
-                    thickness = 1.dp,
-                )
+            SettingsCard(
+                isFirstItem = true,
+                itemName = stringResource(R.string.settings),
+                itemSubText = stringResource(R.string.manage_settings_of_the_app),
+                iconVector = Icons.Outlined.Settings,
+                onClick = {
+                    navController.navigate(Screens.Settings)
+                }
+            )
 
-                SettingsCard(
-                    itemName = "Help",
-                    itemSubText = "Get help using MedAI",
-                    iconVector = Icons.AutoMirrored.Outlined.Help,
-                    onClick = {
-                        navController.navigate(Screens.Help.route)
-                    }
-                )
-            }
+            Spacer(modifier = Modifier.height(2.dp))
+
+            SettingsCard(
+                isLastItem = true,
+                itemName = stringResource(R.string.help),
+                itemSubText = stringResource(R.string.get_help_using_medai),
+                iconVector = Icons.AutoMirrored.Outlined.Help,
+                onClick = {
+                    navController.navigate(Screens.Help)
+                }
+            )
+
 
             Spacer(modifier = Modifier.height(30.dp))
 
-            SettingsItemGroup {
-                SettingsCard(
-                    itemName = "Send Love",
-                    itemSubText = "Rate MedAI on the Play Store",
-                    iconVector = Icons.Outlined.RateReview,
-                    onClick = {
-                        val intent = Intent(Intent.ACTION_VIEW)
-                        intent.data = Constants.PLAY_STORE_URL.toUri()
-                        context.startActivity(intent)
-                    }
-                )
 
-                HorizontalDivider(
-                    thickness = 1.dp,
-                )
+            SettingsCard(
+                isFirstItem = true,
+                itemName = stringResource(R.string.send_love),
+                itemSubText = stringResource(R.string.rate_medai_on_the_play_store),
+                iconVector = Icons.Outlined.RateReview,
+                onClick = {
+                    val intent = Intent(Intent.ACTION_VIEW)
+                    intent.data = Constants.PLAY_STORE_URL.toUri()
+                    context.startActivity(intent)
+                }
+            )
 
-                SettingsCard(
-                    itemName = "Invite Friends",
-                    itemSubText = "Like MedAI? Share with friends!",
-                    iconVector = Icons.Outlined.Share,
-                    onClick = {
-                        val sendIntent = Intent(Intent.ACTION_SEND).apply {
-                            putExtra(Intent.EXTRA_TEXT, Constants.INVITE)
-                            type = "text/plain"
-                        }
-                        val shareIntent = Intent.createChooser(sendIntent, null)
-                        context.startActivity(shareIntent)
+            Spacer(modifier = Modifier.height(2.dp))
+
+            SettingsCard(
+                itemName = "Feature Request",
+                itemSubText = "We'd love to hear from you!",
+                iconVector = Icons.AutoMirrored.Outlined.Message,
+                onClick = {
+                    showBottomSheet = true
+                }
+            )
+
+            Spacer(modifier = Modifier.height(2.dp))
+            
+            SettingsCard(
+                isLastItem = true,
+                itemName = stringResource(R.string.invite_friends),
+                itemSubText = stringResource(R.string.like_medai_share_with_friends),
+                iconVector = Icons.Outlined.Share,
+                onClick = {
+                    val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                        putExtra(Intent.EXTRA_TEXT, Constants.INVITE)
+                        type = "text/plain"
                     }
-                )
-            }
+                    val shareIntent = Intent.createChooser(sendIntent, null)
+                    context.startActivity(shareIntent)
+                }
+            )
+
 
             Spacer(modifier = Modifier.weight(1f))
 

@@ -1,4 +1,4 @@
-package com.aritradas.medai.ui.presentation.prescription
+package com.aritradas.medai.ui.presentation.medicalReport
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -26,13 +26,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.Assignment
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Clear
+import androidx.compose.material.icons.outlined.MedicalInformation
 import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButton
@@ -41,11 +39,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -67,24 +64,21 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.aritradas.medai.R
 import com.aritradas.medai.navigation.Screens
-import com.aritradas.medai.ui.presentation.prescription.component.PrescriptionCard
+import com.aritradas.medai.ui.presentation.medicalReport.component.ReportCard
 import com.aritradas.medai.ui.presentation.prescription.component.PrescriptionCardShimmer
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.seconds
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun PrescriptionScreen(
+fun MedicalReportScreen(
     navController: NavController,
-    viewModel: PrescriptionViewModel = hiltViewModel(),
-    navigateToDetailsScreen:(id: String) -> Unit
+    viewModel: MedicalReportViewModel = hiltViewModel()
 ) {
-
     val scope = rememberCoroutineScope()
     val activity = LocalActivity.current
     val context = LocalContext.current
-    val uiState by viewModel.uiState.collectAsState()
     var backPressedState by remember { mutableStateOf(false) }
 
     var hasNotificationPermission by remember {
@@ -99,7 +93,7 @@ fun PrescriptionScreen(
             mutableStateOf(true)
         }
     }
-    
+
     var hasCameraPermission by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(
@@ -118,7 +112,7 @@ fun PrescriptionScreen(
             permissionRequestInProgress = false
         }
     )
-    
+
     val cameraPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = { isGranted ->
@@ -140,6 +134,7 @@ fun PrescriptionScreen(
                 permissionRequestInProgress = true
                 permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
+
             !hasCameraPermission -> {
                 permissionRequestInProgress = true
                 cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
@@ -147,17 +142,15 @@ fun PrescriptionScreen(
         }
     }
 
-    LaunchedEffect(Unit) {
-        viewModel.loadPrescriptions()
-    }
-
     BackHandler {
         if (backPressedState) {
             activity?.finish()
         } else {
             backPressedState = true
-            Toast.makeText(context,
-                context.getString(R.string.press_back_again_to_exit), Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                context,
+                context.getString(R.string.press_back_again_to_exit), Toast.LENGTH_SHORT
+            ).show()
 
             scope.launch {
                 delay(2.seconds)
@@ -166,21 +159,27 @@ fun PrescriptionScreen(
         }
     }
 
+    val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.loadReports()
+    }
+
     Scaffold(
         topBar = {
             SearchBar(
                 query = uiState.searchQuery,
-                onQueryChange = viewModel::searchPrescriptions,
+                onQueryChange = viewModel::searchReports,
                 onSearch = { },
                 active = false,
                 onActiveChange = { },
                 content = {
-                    Text("Search prescriptions...")
+                    Text("Search medical reports...")
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
-                placeholder = { Text("Search prescriptions...") },
+                placeholder = { Text("Search medical reports...") },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Outlined.Search,
@@ -190,7 +189,7 @@ fun PrescriptionScreen(
                 trailingIcon = {
                     if (uiState.searchQuery.isNotEmpty()) {
                         IconButton(
-                            onClick = { viewModel.searchPrescriptions("") }
+                            onClick = { viewModel.searchReports("") }
                         ) {
                             Icon(
                                 imageVector = Icons.Outlined.Clear,
@@ -205,9 +204,7 @@ fun PrescriptionScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    navController.navigate(
-                        Screens.PrescriptionSummarize(hasCameraPermission = hasCameraPermission)
-                    )
+                    navController.navigate(Screens.MedicalReportSummarize(hasCameraPermission = hasCameraPermission))
                 }
             ) {
                 Icon(
@@ -228,6 +225,7 @@ fun PrescriptionScreen(
             ) {
                 when {
                     uiState.isLoading -> {
+                        // Simple loading placeholder
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
                             contentPadding = PaddingValues(16.dp),
@@ -239,14 +237,14 @@ fun PrescriptionScreen(
                         }
                     }
 
-                    uiState.filteredPrescriptions.isEmpty() && uiState.prescriptions.isEmpty() -> {
+                    uiState.filteredReports.isEmpty() && uiState.reports.isEmpty() -> {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
                             val transition = rememberInfiniteTransition(
-                                label = "Prescription rotate"
+                                label = "medical report rotate"
                             )
                             val angle by transition.animateFloat(
                                 initialValue = 0f,
@@ -258,7 +256,7 @@ fun PrescriptionScreen(
                                     ),
                                     repeatMode = RepeatMode.Restart
                                 ),
-                                label = "Prescription animation"
+                                label = "Medical report animation"
                             )
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Box(contentAlignment = Alignment.Center) {
@@ -273,7 +271,7 @@ fun PrescriptionScreen(
                                             .size(100.dp)
                                     )
                                     Icon(
-                                        imageVector = Icons.AutoMirrored.Outlined.Assignment,
+                                        imageVector = Icons.Outlined.MedicalInformation,
                                         contentDescription = null,
                                         tint = colorScheme.onPrimaryContainer,
                                         modifier = Modifier
@@ -282,44 +280,16 @@ fun PrescriptionScreen(
                                     )
                                 }
                                 Text(
-                                    text = "No Prescriptions saved",
+                                    text = "No Medical Reports saved",
                                     textAlign = TextAlign.Center,
                                     style = MaterialTheme.typography.titleLarge,
                                     modifier = Modifier.padding(8.dp)
                                 )
                                 Text(
-                                    text = "Tap the + button to scan your first prescription",
+                                    text = "Tap the + button to scan your first medical report",
                                     textAlign = TextAlign.Center,
                                     style = MaterialTheme.typography.bodyMedium,
                                     modifier = Modifier.padding(horizontal = 48.dp)
-                                )
-                            }
-                        }
-                    }
-
-                    uiState.filteredPrescriptions.isEmpty() && uiState.searchQuery.isNotEmpty() -> {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Icon(
-                                    imageVector = Icons.Outlined.Search,
-                                    contentDescription = null,
-                                    tint = colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.size(64.dp)
-                                )
-                                Text(
-                                    text = "No prescriptions found",
-                                    textAlign = TextAlign.Center,
-                                    style = MaterialTheme.typography.titleLarge,
-                                    modifier = Modifier.padding(8.dp)
-                                )
-                                Text(
-                                    text = "Try adjusting your search terms",
-                                    textAlign = TextAlign.Center,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = colorScheme.onSurfaceVariant
                                 )
                             }
                         }
@@ -331,11 +301,13 @@ fun PrescriptionScreen(
                             contentPadding = PaddingValues(16.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            items(uiState.filteredPrescriptions) { prescription ->
-                                PrescriptionCard(
-                                    prescription = prescription,
+                            items(uiState.filteredReports) { report ->
+                                ReportCard(
+                                    report = report,
                                     onClick = {
-                                        navigateToDetailsScreen(prescription.id)
+                                        navController.navigate(
+                                            Screens.MedicalReportDetails(id = report.id)
+                                        )
                                     }
                                 )
                             }
@@ -344,19 +316,5 @@ fun PrescriptionScreen(
                 }
             }
         }
-    }
-
-    // Error dialog
-    uiState.error?.let { error ->
-        AlertDialog(
-            onDismissRequest = { viewModel.clearError() },
-            title = { Text("Error") },
-            text = { Text(error) },
-            confirmButton = {
-                TextButton(onClick = { viewModel.clearError() }) {
-                    Text("OK")
-                }
-            }
-        )
     }
 }

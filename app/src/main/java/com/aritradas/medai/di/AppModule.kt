@@ -8,9 +8,11 @@ import androidx.datastore.preferences.preferencesDataStoreFile
 import com.aritradas.medai.R
 import com.aritradas.medai.data.datastore.DataStoreUtil
 import com.aritradas.medai.data.repository.AuthRepositoryImpl
+import com.aritradas.medai.data.repository.MedicalReportRepositoryImpl
 import com.aritradas.medai.data.repository.MedicineDetailsRepositoryImpl
 import com.aritradas.medai.data.repository.PrescriptionRepositoryImpl
 import com.aritradas.medai.domain.repository.AuthRepository
+import com.aritradas.medai.domain.repository.MedicalReportRepository
 import com.aritradas.medai.domain.repository.MedicineDetailsRepository
 import com.aritradas.medai.domain.repository.PrescriptionRepository
 import com.aritradas.medai.utils.AppBioMetricManager
@@ -63,9 +65,15 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun providesMedicineDetailsRepository(
-        medicineDetailsRepositoryImpl: MedicineDetailsRepositoryImpl
-    ): MedicineDetailsRepository = medicineDetailsRepositoryImpl
+    fun provideMedicineDetailsRepository(
+        impl: MedicineDetailsRepositoryImpl
+    ): MedicineDetailsRepository = impl
+
+    @Provides
+    @Singleton
+    fun provideMedicalReportRepository(
+        medicalReportRepositoryImpl: MedicalReportRepositoryImpl
+    ): MedicalReportRepository = medicalReportRepositoryImpl
 
     @Provides
     fun provideDataStoreUtil(@ApplicationContext context: Context): DataStoreUtil =
