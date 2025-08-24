@@ -3,6 +3,8 @@ package com.aritradas.medai.ui.presentation.onboarding
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,7 +21,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -33,9 +37,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.aritradas.medai.R
 import com.aritradas.medai.navigation.Screens
+import com.aritradas.medai.ui.presentation.auth.AuthViewModel
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.seconds
@@ -64,6 +73,59 @@ fun WelcomeScreen(
                 delay(2.seconds)
                 backPressedState = false
             }
+        }
+    }
+
+    val authViewModel: AuthViewModel = hiltViewModel()
+    val googleSignInResult by authViewModel.googleSignInResult.observeAsState()
+
+    val launcher =
+        rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+            try {
+                val account = task.getResult(ApiException::class.java)
+                val idToken = account.idToken
+                if (idToken != null) {
+                    authViewModel.signInWithGoogle(idToken)
+                } else {
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.google_sign_in_failed_no_id_token),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        } catch (e: ApiException) {
+            Toast.makeText(
+                context,
+                "Google Sign-In failed: ${e.localizedMessage}",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    LaunchedEffect(googleSignInResult) {
+        when (val result = googleSignInResult) {
+            is com.aritradas.medai.utils.Resource.Success -> {
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.login_successful),
+                    Toast.LENGTH_SHORT
+                ).show()
+                // Replace with whatever post-login navigation is necessary:
+                navController.navigate(Screens.SignUp) {
+                    popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                }
+            }
+
+            is com.aritradas.medai.utils.Resource.Error -> {
+                Toast.makeText(
+                    context,
+                    result.message ?: "Google Sign-In failed.",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+
+            else -> Unit
         }
     }
 
@@ -121,7 +183,33 @@ fun WelcomeScreen(
                 shape = MaterialTheme.shapes.medium,
             ) {
                 Text(
-                    text = "Get Started",
+                    text = stringResource(R.string.get_started),
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            FilledTonalButton(
+                onClick = {
+                    // Google Sign-In
+                    val gso = GoogleSignInOptions.Builder(
+                        GoogleSignInOptions.DEFAULT_SIGN_IN
+                    )
+                        .requestIdToken(context.getString(R.string.web_client_id))
+                        .requestEmail()
+                        .build()
+                    val googleSignInClient =
+                        GoogleSignIn.getClient(context, gso)
+                    launcher.launch(googleSignInClient.signInIntent)
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = MaterialTheme.shapes.medium
+            ) {
+                Text(
+                    text = stringResource(R.string.sign_in_with_google),
                     style = MaterialTheme.typography.titleMedium
                 )
             }
