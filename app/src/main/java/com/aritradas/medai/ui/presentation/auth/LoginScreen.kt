@@ -81,7 +81,8 @@ fun LoginScreen(
     val context = LocalContext.current
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    val isSignInButtonEnable by remember { derivedStateOf { validateEmail(email) } }
+    var emailTouched by remember { mutableStateOf(false) }
+    var passwordTouched by remember { mutableStateOf(false) }
 
     val errorLiveData by authViewModel.errorLiveData.observeAsState()
     val loginSuccess by authViewModel.loginSuccess.observeAsState()
@@ -94,6 +95,24 @@ fun LoginScreen(
     val density = LocalDensity.current
     val imeInsets = WindowInsets.ime
     val isKeyboardVisible = imeInsets.getBottom(density) > 0
+
+    val emailError: String? = when {
+        !emailTouched -> null
+        email.isEmpty() -> "Email is required."
+        !validateEmail(email) -> "Please enter a valid email address."
+        else -> null
+    }
+    val passwordError: String? = when {
+        !passwordTouched -> null
+        password.isEmpty() -> "Password is required."
+        else -> null
+    }
+
+    val isSignInButtonEnable by remember {
+        derivedStateOf {
+            validateEmail(email) && password.isNotEmpty() && !isLoading
+        }
+    }
 
     LaunchedEffect(errorLiveData) {
         errorLiveData?.let { error ->
@@ -146,14 +165,17 @@ fun LoginScreen(
                 .padding(innerPadding)
                 .windowInsetsPadding(WindowInsets.ime)
                 .verticalScroll(scrollState)
-            .padding(horizontal = 16.dp, vertical = 20.dp),
+                .padding(horizontal = 16.dp, vertical = 20.dp),
             horizontalAlignment = Alignment.End,
             verticalArrangement = Arrangement.Top
         ) {
 
             OutlinedTextField(
                 value = email,
-                onValueChange = { email = it },
+                onValueChange = {
+                    email = it
+                    if (!emailTouched) emailTouched = true
+                },
                 label = { Text("Email") },
                 placeholder = { Text("Enter your email") },
                 keyboardOptions = KeyboardOptions(
@@ -169,17 +191,25 @@ fun LoginScreen(
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !isLoading,
-                isError = email.isNotEmpty() && !validateEmail(email),
-                supportingText = if (email.isNotEmpty() && !validateEmail(email)) {
-                    { Text("Please enter a valid email address") }
-                } else null
+                isError = emailError != null,
+                supportingText = emailError?.let {
+                    {
+                        Text(
+                            it,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
             OutlinedTextField(
                 value = password,
-                onValueChange = { password = it },
+                onValueChange = {
+                    password = it
+                    if (!passwordTouched) passwordTouched = true
+                },
                 label = { Text("Password") },
                 placeholder = { Text("Enter your password") },
                 trailingIcon = {
@@ -203,7 +233,8 @@ fun LoginScreen(
                 ),
                 keyboardActions = KeyboardActions(
                     onDone = {
-                        if (!isLoading) {
+                        passwordTouched = true
+                        if (isSignInButtonEnable) {
                             focusManager.clearFocus()
                             keyboardController?.hide()
                             authViewModel.logIn(email, password)
@@ -212,7 +243,16 @@ fun LoginScreen(
                 ),
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
-                enabled = !isLoading
+                enabled = !isLoading,
+                isError = passwordError != null,
+                supportingText = passwordError?.let {
+                    {
+                        Text(
+                            it,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
             )
 
             AnimatedVisibility(!isKeyboardVisible) {
@@ -230,14 +270,18 @@ fun LoginScreen(
 
             Button(
                 onClick = {
+                    emailTouched = true
+                    passwordTouched = true
                     focusManager.clearFocus()
-                    authViewModel.logIn(email, password)
+                    if (isSignInButtonEnable) {
+                        authViewModel.logIn(email, password)
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
                 shape = MaterialTheme.shapes.extraLarge,
-                enabled = isSignInButtonEnable && !isLoading
+                enabled = isSignInButtonEnable
             ) {
                 if (isLoading) {
                     LoadingIndicator(
